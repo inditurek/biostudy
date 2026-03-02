@@ -63,7 +63,7 @@ export default async function HistorialPage() {
   const materias: MateriaConNotas[] = ((rawMaterias ?? []) as MateriaRow[]).map(
     (row): MateriaConNotas => {
       const { notas_materia, ...materiaBase } = row
-      return { ...materiaBase, notas: notas_materia[0] ?? null }
+      return { ...materiaBase, notas: (notas_materia ?? [])[0] ?? null }
     }
   )
 
