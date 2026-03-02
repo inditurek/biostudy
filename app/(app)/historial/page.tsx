@@ -33,13 +33,31 @@ export default async function HistorialPage() {
   if (!user) redirect('/login')
 
   // Traer materias + notas en una sola query
-  const { data: rawMaterias } = await supabase
+  const { data: rawMaterias, error: queryError } = await supabase
     .from('materias')
     .select('*, notas_materia(*)')
     .eq('usuario_id', user.id)
     .order('anio', { ascending: true })
     .order('cuatrimestre', { ascending: true })
     .order('nombre', { ascending: true })
+
+  // Si la query falla (ej: tablas no existen en producción), mostrar error claro
+  if (queryError) {
+    console.error('[historial] Error al cargar materias:', queryError)
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50 p-8">
+        <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 px-8 py-10 text-center">
+          <p className="font-fraunces text-lg font-semibold text-red-700">Error al cargar el historial</p>
+          <p className="mt-2 text-sm text-red-600">
+            {queryError.message || 'No se pudo conectar con la base de datos.'}
+          </p>
+          <p className="mt-4 text-xs text-red-400">
+            Verificá que las tablas estén creadas en Supabase y que las variables de entorno estén configuradas en Vercel.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   // Aplanar: quitar el array notas_materia y exponer el primer elemento como `notas`
   const materias: MateriaConNotas[] = ((rawMaterias ?? []) as MateriaRow[]).map(
