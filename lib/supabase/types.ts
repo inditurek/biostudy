@@ -144,7 +144,16 @@ export type MateriaInsert = Omit<Materia, 'id' | 'creado_en'> & {
   creado_en?: string
 }
 
-export type NotaMateriaInsert = Omit<NotaMateria, 'id'> & { id?: string }
+// Todos los campos de notas son nullable en el DB → opcionales en insert
+export type NotaMateriaInsert = {
+  id?: string
+  materia_id: string
+  p1?: number | null
+  p2?: number | null
+  recuperatorio?: number | null
+  cursada?: number | null
+  final?: number | null
+}
 
 export type EventoInsert = Omit<Evento, 'id' | 'creado_en'> & {
   id?: string
