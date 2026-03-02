@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyLab — Cuadernos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--v9:#1e0a3c;--v8:#2d1354;--v7:#3d1a6e;--v6:#5b2d9e;--v5:#7c3aed;--v4:#a855f7;--v3:#c084fc;--v2:#e9d5ff;--v1:#f5f0ff;--v0:#faf7ff;--g6:#6b7280;--g4:#9ca3af;--g2:#e5e7eb;--g1:#f3f4f6;--green:#16a34a;--orange:#ea580c}
+body{font-family:'DM Sans',sans-serif;background:var(--v0);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 110%,rgba(168,85,247,.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+/* ─ SIDEBAR ─ */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--v9);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;z-index:100;box-shadow:4px 0 24px rgba(30,10,60,.15)}
+.sidebar-logo{width:40px;height:40px;background:var(--v5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;box-shadow:0 4px 16px rgba(124,58,237,.4)}
+.nav-item{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;color:rgba(255,255,255,.4);border:none;background:transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-item.active{background:var(--v6);color:#fff;box-shadow:0 4px 12px rgba(91,45,158,.5)}
+.nav-item svg{width:22px;height:22px}
+.nav-tooltip{position:absolute;left:calc(100% + 12px);background:var(--v8);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-item:hover .nav-tooltip{opacity:1}
+
+/* ─ MAIN ─ */
+.main{margin-left:72px;min-height:100vh;padding:36px 40px;position:relative;z-index:1}
+.view{display:none}
+.view.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─ BREADCRUMB ─ */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
+.bc-item{font-weight:500;color:var(--g4);cursor:pointer;transition:color .15s}
+.bc-item:hover{color:var(--v5)}
+.bc-item.active{font-weight:700;color:var(--v9);cursor:default}
+.bc-sep{color:var(--g2);font-size:16px}
+
+/* ─ PAGE HEADER ─ */
+.page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px}
+.page-title{font-family:'Fraunces',serif;font-size:32px;font-weight:600;color:var(--v9);line-height:1.1}
+.page-sub{font-size:14px;color:var(--g6);margin-top:4px}
+.btn-new{display:flex;align-items:center;gap:8px;background:var(--v5);color:#fff;border:none;border-radius:12px;padding:12px 20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,.35);transition:all .2s}
+.btn-new:hover{background:var(--v6);transform:translateY(-1px)}
+.btn-new svg{width:18px;height:18px}
+.btn-sm{display:flex;align-items:center;gap:6px;background:var(--v5);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(124,58,237,.3);transition:all .2s}
+.btn-sm:hover{background:var(--v6);transform:translateY(-1px)}
+.btn-sm svg{width:15px;height:15px}
+
+/* ─ CUADERNOS GRID ─ */
+.notebooks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:24px}
+.notebook-card{cursor:pointer;transition:transform .25s,box-shadow .25s;position:relative}
+.notebook-card:hover{transform:translateY(-6px) rotate(-1deg)}
+.notebook-card:hover .notebook-book{box-shadow:0 20px 40px rgba(0,0,0,.18)}
+.notebook-book{border-radius:4px 12px 12px 4px;height:220px;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.12);transition:box-shadow .25s;display:flex;flex-direction:column;justify-content:flex-end;padding:20px 16px 16px;overflow:hidden}
+.notebook-book::before{content:'';position:absolute;left:0;top:0;bottom:0;width:14px;background:rgba(0,0,0,.15);border-radius:4px 0 0 4px}
+.notebook-book::after{content:'';position:absolute;top:20px;right:16px;width:40px;height:40px;border:2px solid rgba(255,255,255,.2);border-radius:50%}
+.notebook-lines{position:absolute;top:24px;left:28px;right:16px;display:flex;flex-direction:column;gap:8px;opacity:.15}
+.notebook-line{height:2px;background:#fff;border-radius:2px}
+.notebook-line:nth-child(2){width:70%}
+.notebook-line:nth-child(3){width:50%}
+.notebook-icon{width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.notebook-icon svg{width:20px;height:20px;color:#fff}
+.notebook-materia{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:#fff;line-height:1.2;position:relative;z-index:1}
+.notebook-meta{font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;font-weight:400;position:relative;z-index:1}
+.notebook-status{position:absolute;top:12px;right:12px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.25);color:#fff;letter-spacing:.04em;text-transform:uppercase}
+
+/* ─ NOTEBOOK DETAIL (VIEW 2) ─ */
+.notebook-detail-header{display:flex;align-items:center;gap:20px;margin-bottom:28px}
+.notebook-cover-mini{width:56px;height:72px;border-radius:2px 8px 8px 2px;box-shadow:0 6px 16px rgba(0,0,0,.15);position:relative;flex-shrink:0}
+.notebook-cover-mini::before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:rgba(0,0,0,.15);border-radius:2px 0 0 2px}
+.notebook-detail-title{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--v9)}
+.notebook-detail-sub{font-size:13px;color:var(--g6);margin-top:4px}
+.separadores-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.section-label{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9);display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';display:inline-block;width:60px;height:1px;background:var(--g2);margin-left:4px}
+.separadores-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px}
+.separador-card{background:#fff;border-radius:14px;border:1.5px solid var(--g2);padding:20px;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:10px}
+.separador-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(91,45,158,.12);border-color:var(--v3)}
+.sep-tab{height:4px;border-radius:4px;width:40px}
+.sep-title{font-size:14px;font-weight:600;color:var(--v9)}
+.sep-count{font-size:12px;color:var(--g4)}
+.sep-tags{display:flex;gap:6px;flex-wrap:wrap}
+.sep-tag{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;background:var(--v1);color:var(--v6)}
+
+/* Files en cuaderno */
+.section-divider{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:8px}
+.section-divider-label{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9)}
+.file-list{display:flex;flex-direction:column;gap:10px}
+.file-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;background:#fff;border:1.5px solid var(--g2);transition:all .2s;cursor:pointer}
+.file-item:hover{background:var(--v1);border-color:var(--v3)}
+.file-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.file-icon svg{width:18px;height:18px;color:#fff}
+.file-name{font-size:13px;font-weight:600;color:var(--v9)}
+.file-meta{font-size:11px;color:var(--g4);margin-top:2px}
+.file-actions{margin-left:auto;display:flex;gap:6px}
+.file-btn{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;border:1.5px solid var(--g2);cursor:pointer;transition:all .2s;background:#fff;color:var(--g6)}
+.file-btn:hover{border-color:var(--v3);color:var(--v5);background:var(--v1)}
+.file-btn.primary{background:var(--v5);color:#fff;border-color:transparent}
+.file-btn.primary:hover{background:var(--v6)}
+.add-file-btn{display:flex;align-items:center;gap:8px;margin-top:10px;padding:11px 14px;border-radius:10px;background:var(--g1);cursor:pointer;transition:all .2s;font-size:13px;color:var(--g4);font-weight:500;border:1.5px dashed var(--g2);width:100%}
+.add-file-btn:hover{background:var(--v1);color:var(--v5);border-color:var(--v3)}
+
+/* ─ VIEW 3: SEPARADOR INTERIOR ─ */
+.sep-detail-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.sep-color-bar{width:6px;height:52px;border-radius:4px;flex-shrink:0}
+.sep-detail-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:var(--v9)}
+.sep-detail-sub{font-size:13px;color:var(--g6);margin-top:2px}
+
+/* ─ VIEW 4: GUÍA DE ESTUDIO (integrada) ─ */
+/* MODE TABS */
+.mode-tabs{display:flex;gap:12px;margin-bottom:24px}
+.mode-tab{flex:1;border-radius:14px;padding:18px 20px;cursor:pointer;transition:all .2s;border:2px solid var(--g2);background:#fff;display:flex;align-items:center;gap:14px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.mode-tab:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(91,45,158,.1)}
+.mode-tab.active-tab{border-color:var(--v5);background:var(--v1);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.mode-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.mode-tab.clases .mode-icon{background:var(--v2)}
+.mode-tab.examenes .mode-icon{background:#ffedd5}
+.mode-tab.sprint .mode-icon{background:#fef9c3}
+.mode-tab-title{font-size:14px;font-weight:700;color:var(--v9)}
+.mode-tab-desc{font-size:11px;color:var(--g6);margin-top:2px}
+.sprint-badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#fef9c3;color:#854d0e;margin-top:4px}
+
+/* TEMPLATE PILLS */
+.template-bar{display:flex;align-items:center;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.template-bar-label{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.tpl-pill{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1.5px solid var(--g2);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tpl-pill:hover{border-color:var(--v3);background:var(--v1)}
+.tpl-pill.active{border-color:var(--v5);background:var(--v1);color:var(--v6)}
+
+/* GUIA LAYOUT: sidebar + chat */
+.guia-layout{display:grid;grid-template-columns:240px 1fr;gap:18px}
+.guia-sidebar{display:flex;flex-direction:column;gap:14px}
+.sidebar-box{background:#fff;border-radius:14px;border:1.5px solid var(--g2);padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.sidebar-box-title{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.source-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;background:var(--g1);margin-bottom:7px;font-size:12px;font-weight:500;color:var(--v9);cursor:pointer;transition:background .2s}
+.source-item:hover{background:var(--v1)}
+.source-item:last-child{margin-bottom:0}
+.source-icon{width:26px;height:26px;border-radius:7px;background:var(--v5);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.source-icon svg{width:13px;height:13px;color:#fff}
+.source-name{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.add-source{display:flex;align-items:center;gap:7px;margin-top:8px;padding:7px 9px;border-radius:9px;background:var(--g1);cursor:pointer;font-size:11px;color:var(--g4);font-weight:500;border:1.5px dashed var(--g2);width:100%;transition:all .2s}
+.add-source:hover{background:var(--v1);color:var(--v5);border-color:var(--v3)}
+
+/* TOOLS GRID */
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tool-btn{display:flex;align-items:center;gap:7px;padding:8px 9px;border-radius:9px;border:1.5px solid var(--g2);background:#fff;cursor:pointer;transition:all .2s;font-size:11px;font-weight:600;color:var(--v9)}
+.tool-btn:hover{border-color:var(--v3);background:var(--v1);transform:translateY(-1px)}
+.tool-btn .t-icon{font-size:14px}
+
+/* CHAT */
+.chat-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.04);display:flex;flex-direction:column;height:520px}
+.chat-header{padding:14px 18px;border-bottom:1px solid var(--g2);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chat-ai-dot{width:9px;height:9px;border-radius:50%;background:var(--v5);box-shadow:0 0 0 3px rgba(124,58,237,.2);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(124,58,237,.2)}50%{box-shadow:0 0 0 6px rgba(124,58,237,.07)}}
+.chat-header-title{font-size:13px;font-weight:700;color:var(--v9)}
+.chat-header-sub{font-size:11px;color:var(--g4)}
+.chat-messages{padding:14px 18px;display:flex;flex-direction:column;gap:11px;overflow-y:auto;flex:1}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+.msg.ai{background:var(--v1);color:var(--v9);border-radius:4px 12px 12px 12px;align-self:flex-start;border:1px solid var(--v2)}
+.msg.user{background:var(--v5);color:#fff;border-radius:12px 4px 12px 12px;align-self:flex-end}
+.chat-input-row{padding:11px 14px;border-top:1px solid var(--g2);display:flex;gap:8px;flex-shrink:0}
+.chat-input{flex:1;border:1.5px solid var(--g2);border-radius:10px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.chat-input:focus{border-color:var(--v4)}
+.chat-send{background:var(--v5);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.chat-send:hover{background:var(--v6)}
+
+/* SPRINT */
+.sprint-banner{background:linear-gradient(135deg,#7c2d12,#ea580c,#f97316);border-radius:16px;padding:20px 24px;margin-bottom:22px;box-shadow:0 8px 24px rgba(234,88,12,.3);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between}
+.sprint-banner::before{content:'';position:absolute;right:-20px;top:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.06)}
+.sprint-banner-left{position:relative;z-index:1}
+.sprint-banner-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
+.sprint-banner-sub{font-size:12px;color:rgba(255,255,255,.8)}
+.sprint-pb-row{display:flex;align-items:center;gap:10px;margin-top:12px;position:relative;z-index:1}
+.sprint-pb{height:6px;background:rgba(255,255,255,.2);border-radius:4px;overflow:hidden;flex:1}
+.sprint-pb-fill{height:100%;background:#fff;border-radius:4px}
+.sprint-pb-label{font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
+.sprint-today-btn{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s;position:relative;z-index:1;white-space:nowrap}
+.sprint-today-btn:hover{background:rgba(255,255,255,.3)}
+
+/* SPRINT DAYS */
+.sprint-days-compact{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:22px}
+.sd{background:#fff;border-radius:10px;border:1.5px solid var(--g2);padding:11px;box-shadow:0 2px 4px rgba(0,0,0,.04)}
+.sd.today{border-color:var(--orange);box-shadow:0 0 0 3px rgba(234,88,12,.1)}
+.sd.done{background:#f0fdf4;border-color:#bbf7d0}
+.sd.locked{opacity:.5}
+.sd-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--g4);margin-bottom:5px}
+.sd.today .sd-label{color:var(--orange)}
+.sd.done .sd-label{color:var(--green)}
+.sd-title{font-size:11px;font-weight:700;color:var(--v9);margin-bottom:5px;line-height:1.3}
+.sd-task{font-size:10px;color:var(--g6);display:flex;gap:4px;margin-bottom:2px;line-height:1.3}
+.sd-task::before{content:'·';color:var(--v4);font-weight:700;flex-shrink:0}
+.sd-task.done-t{text-decoration:line-through;color:var(--g4)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,10,60,.4);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:32px;width:380px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:fadeUp .25s ease}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--v9);margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--g6);margin-bottom:20px}
+.modal-input{width:100%;border:1.5px solid var(--g2);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--v9);margin-bottom:20px;outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:var(--v4)}
+.color-label{font-size:12px;font-weight:600;color:var(--g6);margin-bottom:10px;letter-spacing:.05em;text-transform:uppercase}
+.color-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
+.color-swatch{width:36px;height:36px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.color-swatch:hover{transform:scale(1.1)}
+.color-swatch.selected{border-color:var(--v9);transform:scale(1.15)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{padding:10px 18px;border-radius:10px;border:1.5px solid var(--g2);background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--g6)}
+.btn-create{padding:10px 22px;border-radius:10px;border:none;background:var(--v5);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,.3)}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">SL</div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg><span class="nav-tooltip">Inicio</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg><span class="nav-tooltip">Calendario</span></button>
+  <button class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span class="nav-tooltip">Cuadernos</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="nav-tooltip">Historial Académico</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg><span class="nav-tooltip">Guía de Estudio</span></button>
+  <div style="flex:1"></div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-tooltip">Configuración</span></button>
+</nav>
+
+<main class="main">
+
+  <!-- ═══════════════════════════════════════════════════════
+       VIEW 1: GRILLA DE CUADERNOS
+  ═══════════════════════════════════════════════════════ -->
+  <div id="view-cuadernos" class="view active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Mis Cuadernos 📓</div>
+        <div class="page-sub">6 materias en curso · Cuatrimestre 1 — 2026</div>
+      </div>
+      <button class="btn-new" onclick="openNewNotebook()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+        Nuevo cuaderno
+      </button>
+    </div>
+    <div class="notebooks-grid" id="notebooks-grid">
+      <div class="notebook-card" onclick="openNotebook('Genética Molecular','#5b2d9e','linear-gradient(160deg,#5b2d9e,#7c3aed)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#5b2d9e,#7c3aed)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">En curso</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg></div>
+          <div class="notebook-materia">Genética Molecular</div>
+          <div class="notebook-meta">4 separadores · 12 archivos</div>
+        </div>
+      </div>
+      <div class="notebook-card" onclick="openNotebook('Bioquímica','#0d9488','linear-gradient(160deg,#0d9488,#14b8a6)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#0d9488,#14b8a6)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">En curso</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg></div>
+          <div class="notebook-materia">Bioquímica</div>
+          <div class="notebook-meta">6 separadores · 20 archivos</div>
+        </div>
+      </div>
+      <div class="notebook-card" onclick="openNotebook('Estadística','#d97706','linear-gradient(160deg,#d97706,#f59e0b)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#d97706,#f59e0b)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">⚠️ Parcial pronto</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/></svg></div>
+          <div class="notebook-materia">Estadística</div>
+          <div class="notebook-meta">3 separadores · 8 archivos</div>
+        </div>
+      </div>
+      <div class="notebook-card" onclick="openNotebook('Microbiología','#be123c','linear-gradient(160deg,#be123c,#f43f5e)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#be123c,#f43f5e)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">En curso</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg></div>
+          <div class="notebook-materia">Microbiología</div>
+          <div class="notebook-meta">5 separadores · 15 archivos</div>
+        </div>
+      </div>
+      <div class="notebook-card" onclick="openNotebook('Fisiología','#3730a3','linear-gradient(160deg,#3730a3,#6366f1)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#3730a3,#6366f1)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">En curso</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg></div>
+          <div class="notebook-materia">Fisiología</div>
+          <div class="notebook-meta">4 separadores · 10 archivos</div>
+        </div>
+      </div>
+      <div class="notebook-card" onclick="openNotebook('Química Orgánica','#065f46','linear-gradient(160deg,#065f46,#10b981)')">
+        <div class="notebook-book" style="background:linear-gradient(160deg,#065f46,#10b981)">
+          <div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div>
+          <span class="notebook-status">En curso</span>
+          <div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="notebook-materia">Química Orgánica</div>
+          <div class="notebook-meta">3 separadores · 9 archivos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       VIEW 2: INTERIOR CUADERNO (separadores + archivos)
+  ═══════════════════════════════════════════════════════ -->
+  <div id="view-notebook" class="view">
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+      <span class="bc-item" onclick="showView('cuadernos')">Cuadernos</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item active" id="bc-notebook">Genética Molecular</span>
+    </div>
+
+    <div class="notebook-detail-header">
+      <div class="notebook-cover-mini" id="cover-mini"></div>
+      <div>
+        <div class="notebook-detail-title" id="detail-title">Genética Molecular</div>
+        <div class="notebook-detail-sub">4 separadores · 12 archivos cargados</div>
+      </div>
+    </div>
+
+    <!-- SEPARADORES -->
+    <div class="separadores-header">
+      <div class="section-label">Separadores</div>
+      <button class="btn-sm" onclick="openNewSep()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Nuevo separador</button>
+    </div>
+    <div class="separadores-grid" id="seps-grid">
+      <div class="separador-card" onclick="openSeparador('Unidad 1 — Estructura del ADN','#7c3aed')">
+        <div class="sep-tab" style="background:#7c3aed"></div>
+        <div class="sep-title">Unidad 1 — Estructura del ADN</div>
+        <div class="sep-count">4 archivos · Actualizado hace 2 días</div>
+        <div class="sep-tags"><span class="sep-tag">Apuntes</span><span class="sep-tag">PDF</span></div>
+      </div>
+      <div class="separador-card" onclick="openSeparador('Unidad 2 — Replicación','#a855f7')">
+        <div class="sep-tab" style="background:#a855f7"></div>
+        <div class="sep-title">Unidad 2 — Replicación</div>
+        <div class="sep-count">3 archivos · Actualizado ayer</div>
+        <div class="sep-tags"><span class="sep-tag">Resumen</span><span class="sep-tag">Guía</span></div>
+      </div>
+      <div class="separador-card" onclick="openSeparador('Unidad 3 — Transcripción','#c084fc')">
+        <div class="sep-tab" style="background:#c084fc"></div>
+        <div class="sep-title">Unidad 3 — Transcripción</div>
+        <div class="sep-count">3 archivos · Actualizado hoy</div>
+        <div class="sep-tags"><span class="sep-tag">Apuntes</span></div>
+      </div>
+      <div class="separador-card" onclick="openSeparador('Unidad 4 — Traducción','#e9d5ff')">
+        <div class="sep-tab" style="background:#c084fc"></div>
+        <div class="sep-title">Unidad 4 — Traducción</div>
+        <div class="sep-count">2 archivos · Actualizado hace 5 días</div>
+        <div class="sep-tags"><span class="sep-tag">PDF</span></div>
+      </div>
+    </div>
+
+    <!-- ARCHIVOS DEL CUADERNO -->
+    <div class="section-divider">
+      <div class="section-divider-label">Todos los archivos</div>
+      <button class="btn-sm" style="padding:7px 13px;font-size:12px"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar archivo</button>
+    </div>
+    <div class="file-list">
+      <div class="file-item">
+        <div class="file-icon" style="background:#7c3aed"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <div><div class="file-name">Apunte teórico — Clase 1.pdf</div><div class="file-meta">PDF · 2.4 MB · Subido el 10/02 · Unidad 1</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#4f46e5"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <div><div class="file-name">Guía de ejercicios U1.pdf</div><div class="file-meta">PDF · 1.1 MB · Subido el 12/02 · Unidad 1</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#0d9488"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+        <div><div class="file-name">Resumen propio — ADN.docx</div><div class="file-meta">Word · 340 KB · Subido el 15/02 · Unidad 1</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#d97706"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg></div>
+        <div><div class="file-name">Diagrama estructura ADN.png</div><div class="file-meta">Imagen · 890 KB · Subido el 18/02 · Unidad 1</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+    </div>
+    <button class="add-file-btn"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar archivo...</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       VIEW 3: INTERIOR SEPARADOR
+  ═══════════════════════════════════════════════════════ -->
+  <div id="view-separador" class="view">
+    <div class="breadcrumb">
+      <span class="bc-item" onclick="showView('cuadernos')">Cuadernos</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item" id="bc-sep-notebook" onclick="showView('notebook')">Genética Molecular</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item active" id="bc-sep-name">Unidad 1</span>
+    </div>
+
+    <div class="sep-detail-header">
+      <div class="sep-color-bar" id="sep-color-bar"></div>
+      <div>
+        <div class="sep-detail-title" id="sep-detail-title">Unidad 1 — Estructura del ADN</div>
+        <div class="sep-detail-sub" id="sep-detail-sub">Genética Molecular · 4 archivos</div>
+      </div>
+    </div>
+
+    <!-- ARCHIVOS DEL SEPARADOR -->
+    <div class="section-divider" style="margin-bottom:14px">
+      <div class="section-divider-label" style="font-size:15px">Archivos</div>
+      <button class="btn-sm" style="padding:7px 13px;font-size:12px"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar archivo</button>
+    </div>
+    <div class="file-list" style="margin-bottom:28px">
+      <div class="file-item">
+        <div class="file-icon" style="background:#7c3aed"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <div><div class="file-name">Apunte teórico — Clase 1.pdf</div><div class="file-meta">PDF · 2.4 MB · Subido el 10/02</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#4f46e5"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
+        <div><div class="file-name">Guía de ejercicios U1.pdf</div><div class="file-meta">PDF · 1.1 MB · Subido el 12/02</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#0d9488"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+        <div><div class="file-name">Resumen propio — ADN.docx</div><div class="file-meta">Word · 340 KB · Subido el 15/02</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+      <div class="file-item">
+        <div class="file-icon" style="background:#d97706"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"/></svg></div>
+        <div><div class="file-name">Diagrama estructura ADN.png</div><div class="file-meta">Imagen · 890 KB · Subido el 18/02</div></div>
+        <div class="file-actions"><button class="file-btn">Descargar</button><button class="file-btn primary">Abrir</button></div>
+      </div>
+    </div>
+
+    <!-- ACCESO A GUÍA -->
+    <div style="border-top:1.5px solid var(--g2);padding-top:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9)">🎯 Guía de Estudio</div>
+          <div style="font-size:13px;color:var(--g6);margin-top:3px">Estudiá con IA usando los archivos de esta unidad como fuente.</div>
+        </div>
+        <button class="btn-new" style="padding:10px 18px;font-size:13px" onclick="openGuia()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          Abrir Guía de Estudio
+        </button>
+      </div>
+      <!-- ACCESOS RÁPIDOS DE MODO -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div onclick="openGuia('clases')" style="background:linear-gradient(135deg,#f5f0ff,#ede9fe);border:1.5px solid var(--v2);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:18px;margin-bottom:6px">📘</div>
+          <div style="font-size:13px;font-weight:700;color:var(--v9)">Clases</div>
+          <div style="font-size:11px;color:var(--g6);margin-top:2px">Estudiar el material</div>
+        </div>
+        <div onclick="openGuia('examenes')" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1.5px solid #fed7aa;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:18px;margin-bottom:6px">📝</div>
+          <div style="font-size:13px;font-weight:700;color:var(--v9)">Exámenes</div>
+          <div style="font-size:11px;color:var(--g6);margin-top:2px">Preparar parcial</div>
+        </div>
+        <div onclick="openGuia('sprint')" style="background:linear-gradient(135deg,#fff8f0,#fef3c7);border:1.5px solid #fde047;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div style="font-size:18px;margin-bottom:6px">🏃</div>
+          <div style="font-size:13px;font-weight:700;color:var(--v9)">Sprint</div>
+          <div style="font-size:11px;color:#854d0e;margin-top:2px;font-weight:600">Activo — Estadística</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       VIEW 4: GUÍA DE ESTUDIO (integrada al cuaderno)
+  ═══════════════════════════════════════════════════════ -->
+  <div id="view-guia" class="view">
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+      <span class="bc-item" onclick="showView('cuadernos')">Cuadernos</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item" id="bc-guia-notebook" onclick="showView('notebook')">Genética Molecular</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item" id="bc-guia-sep" onclick="showView('separador')">Unidad 1 — Estructura del ADN</span>
+      <span class="bc-sep">›</span>
+      <span class="bc-item active">Guía de Estudio</span>
+    </div>
+
+    <!-- CONTEXT BAR -->
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:var(--v1);border:1.5px solid var(--v2);margin-bottom:22px">
+      <div id="guia-cover" style="width:38px;height:48px;border-radius:2px 7px 7px 2px;background:linear-gradient(160deg,#5b2d9e,#7c3aed);box-shadow:0 4px 10px rgba(0,0,0,.15);position:relative;flex-shrink:0">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:rgba(0,0,0,.15);border-radius:2px 0 0 2px"></div>
+      </div>
+      <div>
+        <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--v9)" id="guia-context-title">Genética Molecular</div>
+        <div style="font-size:12px;color:var(--g6);margin-top:2px" id="guia-context-sub">Unidad 1 — Estructura del ADN · 4 archivos cargados como fuentes</div>
+      </div>
+    </div>
+
+    <!-- SPRINT BANNER (si sprint activo) -->
+    <div id="sprint-banner-area"></div>
+
+    <!-- MODE TABS -->
+    <div class="mode-tabs">
+      <div class="mode-tab clases active-tab" id="gtab-clases" onclick="switchGuiaMode('clases')">
+        <div class="mode-icon">📘</div>
+        <div>
+          <div class="mode-tab-title">Clases</div>
+          <div class="mode-tab-desc">Estudiar el material de cursada</div>
+        </div>
+      </div>
+      <div class="mode-tab examenes" id="gtab-examenes" onclick="switchGuiaMode('examenes')">
+        <div class="mode-icon">📝</div>
+        <div>
+          <div class="mode-tab-title">Exámenes</div>
+          <div class="mode-tab-desc">Preparación para parciales y finales</div>
+        </div>
+      </div>
+      <div class="mode-tab sprint" id="gtab-sprint" onclick="switchGuiaMode('sprint')">
+        <div class="mode-icon">🏃</div>
+        <div>
+          <div class="mode-tab-title">Sprint de examen</div>
+          <div class="sprint-badge">Activo — Estadística</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPRINT DAYS (solo cuando sprint activo) -->
+    <div id="sprint-days-area" style="display:none">
+      <div class="sprint-days-compact">
+        <div class="sd done"><div class="sd-label">✓ Día 1 · Jue</div><div class="sd-title">Revisión general</div><div class="sd-task done-t">Resumen U1–U2</div><div class="sd-task done-t">Tarjetas U1</div></div>
+        <div class="sd today"><div class="sd-label">🏃 Hoy · Vie</div><div class="sd-title">Unidad 3 + Práctica</div><div class="sd-task">Apuntes U3</div><div class="sd-task">Parcial modelo</div></div>
+        <div class="sd locked"><div class="sd-label">Día 3 · Sáb</div><div class="sd-title">Repaso intensivo</div><div class="sd-task">Mapa mental</div></div>
+        <div class="sd locked"><div class="sd-label">Día 4 · Dom</div><div class="sd-title">Puntos débiles</div><div class="sd-task">Errores</div></div>
+        <div class="sd locked"><div class="sd-label">Día 5 · Lun</div><div class="sd-title">🎯 Parcial</div><div class="sd-task">Repaso flash</div></div>
+      </div>
+    </div>
+
+    <!-- TEMPLATE BAR -->
+    <div class="template-bar">
+      <div class="template-bar-label">Template:</div>
+      <div class="tpl-pill active" id="active-tpl-label" onclick="setTpl(this,'✍️ Parcial escrito')">✍️ Parcial escrito</div>
+      <div class="tpl-pill" onclick="setTpl(this,'☑️ Múltiple choice')">☑️ Múltiple choice</div>
+      <div class="tpl-pill" onclick="setTpl(this,'🗣️ Oral')">🗣️ Oral</div>
+      <div class="tpl-pill" onclick="setTpl(this,'🔬 Laboratorio')">🔬 Laboratorio</div>
+      <div class="tpl-pill" onclick="setTpl(this,'📄 Tesis')">📄 Tesis</div>
+      <div class="tpl-pill" onclick="setTpl(this,'🔁 Repaso rápido')">🔁 Repaso rápido</div>
+    </div>
+
+    <!-- LAYOUT: FUENTES+HERRAMIENTAS | CHAT -->
+    <div class="guia-layout">
+      <div class="guia-sidebar">
+        <!-- FUENTES -->
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">Fuentes · Unidad 1</div>
+          <div class="source-item"><div class="source-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><span class="source-name">Apunte teórico — Clase 1.pdf</span></div>
+          <div class="source-item"><div class="source-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><span class="source-name">Guía de ejercicios U1.pdf</span></div>
+          <div class="source-item"><div class="source-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 17v-2m3 2v-4m3 4v-6"/></svg></div><span class="source-name">Resumen propio — ADN.docx</span></div>
+          <div class="source-item"><div class="source-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16"/></svg></div><span class="source-name">Diagrama ADN.png</span></div>
+          <button class="add-source"><svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar fuente</button>
+        </div>
+        <!-- HERRAMIENTAS: todas disponibles siempre -->
+        <div class="sidebar-box">
+          <div class="sidebar-box-title">Herramientas</div>
+          <div class="tools-grid">
+            <div class="tool-btn"><span class="t-icon">📋</span>Resumen</div>
+            <div class="tool-btn"><span class="t-icon">🎧</span>Audio</div>
+            <div class="tool-btn"><span class="t-icon">📽️</span>Video</div>
+            <div class="tool-btn"><span class="t-icon">🗺️</span>Mapa mental</div>
+            <div class="tool-btn"><span class="t-icon">📄</span>Informe</div>
+            <div class="tool-btn"><span class="t-icon">🗂️</span>Tarjetas</div>
+            <div class="tool-btn"><span class="t-icon">❓</span>Cuestionario</div>
+            <div class="tool-btn"><span class="t-icon">🖼️</span>Infografía</div>
+            <div class="tool-btn"><span class="t-icon">🎞️</span>Diapositivas</div>
+            <div class="tool-btn"><span class="t-icon">📊</span>Tabla</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="chat-box">
+        <div class="chat-header">
+          <div class="chat-ai-dot" id="g-chat-dot"></div>
+          <div>
+            <div class="chat-header-title" id="g-chat-title">Asistente de clases · Genética Molecular</div>
+            <div class="chat-header-sub" id="g-chat-sub">Basado en los 4 archivos de Unidad 1 · Template: ✍️ Parcial escrito</div>
+          </div>
+        </div>
+        <div class="chat-messages" id="g-chat-msgs">
+          <div class="msg ai" id="g-initial-msg">¡Hola! Cargué los 4 archivos de la <strong>Unidad 1</strong> como fuentes. Estoy en modo <strong>Clases</strong> con el template <strong>Parcial escrito</strong>. Puedo explicarte conceptos, generarte tarjetas, cuestionarios, mapas mentales, resúmenes y más. ¿Por dónde empezamos?</div>
+        </div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="g-chat-in" placeholder="Preguntá o pedí una herramienta..."/>
+          <button class="chat-send" onclick="sendGuiaMsg()">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL NUEVO CUADERNO -->
+<div class="modal-overlay" id="modal-notebook">
+  <div class="modal">
+    <div class="modal-title">Nuevo cuaderno</div>
+    <div class="modal-sub">Elegí el nombre de la materia y el color.</div>
+    <input class="modal-input" type="text" placeholder="Nombre de la materia..." id="modal-name"/>
+    <div class="color-label">Color</div>
+    <div class="color-grid" id="color-grid-nb"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+      <button class="btn-create" onclick="createNotebook()">Crear cuaderno</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO SEPARADOR -->
+<div class="modal-overlay" id="modal-sep">
+  <div class="modal">
+    <div class="modal-title">Nuevo separador</div>
+    <div class="modal-sub">Poné el nombre de la unidad o tema.</div>
+    <input class="modal-input" type="text" placeholder="Ej: Unidad 5 — Traducción..." id="modal-sep-name"/>
+    <div class="color-label">Color del separador</div>
+    <div class="color-grid" id="color-grid-sep"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+      <button class="btn-create" onclick="createSep()">Crear separador</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─ GLOBALS ─
+const COLORS=['#7c3aed','#5b2d9e','#4f46e5','#0d9488','#059669','#d97706','#e11d48','#db2777','#0ea5e9','#64748b','#92400e','#1e40af'];
+let selColorNb=COLORS[0], selColorSep=COLORS[0];
+let curNotebook={name:'Genética Molecular',color:'#5b2d9e',bg:'linear-gradient(160deg,#5b2d9e,#7c3aed)'};
+let curSep={name:'Unidad 1 — Estructura del ADN',color:'#7c3aed'};
+let curGuiaMode='clases';
+
+// ─ BUILD COLOR GRIDS ─
+function buildColorGrid(gridId, setFn, getVar) {
+  const grid = document.getElementById(gridId);
+  COLORS.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === getVar() ? ' selected' : '');
+    sw.style.background = c;
+    sw.onclick = () => {
+      grid.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+      sw.classList.add('selected');
+      setFn(c);
+    };
+    grid.appendChild(sw);
+  });
+}
+buildColorGrid('color-grid-nb', c=>selColorNb=c, ()=>selColorNb);
+buildColorGrid('color-grid-sep', c=>selColorSep=c, ()=>selColorSep);
+
+// ─ NAVIGATION ─
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openNotebook(name, color, bg) {
+  curNotebook = {name, color, bg};
+  document.getElementById('detail-title').textContent = name;
+  document.getElementById('cover-mini').style.background = bg;
+  document.getElementById('bc-notebook').textContent = name;
+  showView('notebook');
+}
+
+function openSeparador(name, color) {
+  curSep = {name, color};
+  document.getElementById('sep-detail-title').textContent = name;
+  document.getElementById('sep-color-bar').style.background = color;
+  document.getElementById('sep-detail-sub').textContent = curNotebook.name + ' · 4 archivos';
+  document.getElementById('bc-sep-notebook').textContent = curNotebook.name;
+  document.getElementById('bc-sep-name').textContent = name.length > 20 ? name.slice(0,20)+'…' : name;
+  showView('separador');
+}
+
+function openGuia(mode) {
+  mode = mode || 'clases';
+  // Update context
+  document.getElementById('guia-cover').style.background = curNotebook.bg || 'linear-gradient(160deg,#5b2d9e,#7c3aed)';
+  document.getElementById('guia-context-title').textContent = curNotebook.name;
+  document.getElementById('guia-context-sub').textContent = curSep.name + ' · 4 archivos cargados como fuentes';
+  document.getElementById('bc-guia-notebook').textContent = curNotebook.name;
+  document.getElementById('bc-guia-sep').textContent = curSep.name.length > 24 ? curSep.name.slice(0,24)+'…' : curSep.name;
+  showView('guia');
+  switchGuiaMode(mode);
+}
+
+function switchGuiaMode(mode) {
+  curGuiaMode = mode;
+  ['clases','examenes','sprint'].forEach(m => {
+    document.getElementById('gtab-'+m).classList.remove('active-tab');
+  });
+  document.getElementById('gtab-'+mode).classList.add('active-tab');
+
+  // Sprint days
+  const sprintDays = document.getElementById('sprint-days-area');
+  sprintDays.style.display = mode === 'sprint' ? 'block' : 'none';
+
+  // Chat context
+  const dot = document.getElementById('g-chat-dot');
+  const title = document.getElementById('g-chat-title');
+  const sub = document.getElementById('g-chat-sub');
+  const initMsg = document.getElementById('g-initial-msg');
+  const tpl = document.querySelector('.tpl-pill.active')?.textContent || '✍️ Parcial escrito';
+
+  if (mode === 'clases') {
+    dot.style.background = 'var(--v5)';
+    title.textContent = 'Asistente de clases · ' + curNotebook.name;
+    sub.textContent = 'Basado en los archivos de ' + (curSep.name.length > 20 ? curSep.name.slice(0,20)+'…' : curSep.name) + ' · Template: ' + tpl;
+    initMsg.innerHTML = '¡Hola! Cargué los archivos de <strong>' + curSep.name + '</strong> como fuentes. Estoy en modo <strong>Clases</strong>. Puedo explicarte conceptos, generarte cualquier herramienta de estudio y responder preguntas. ¿Por dónde empezamos?';
+  } else if (mode === 'examenes') {
+    dot.style.background = 'var(--orange)';
+    title.textContent = 'Asistente de examen · ' + curNotebook.name;
+    sub.textContent = 'Modo preparación · ' + curSep.name.slice(0,24) + '… · Template: ' + tpl;
+    initMsg.innerHTML = 'Modo <strong>Examen</strong> activado. Voy a hacerte preguntas de Active Recall, simular parciales y ayudarte a identificar los temas que más necesitás repasar. ¿Arrancamos con una simulación o preferís que te explique los conceptos clave?';
+  } else {
+    dot.style.background = '#d97706';
+    title.textContent = 'Asistente Sprint · Estadística — Día 2';
+    sub.textContent = 'Hoy: Unidad 3 + Parcial modelo · 3 días para el parcial';
+    initMsg.innerHTML = '¡Día 2 del Sprint! El objetivo de hoy es cubrir la Unidad 3 y hacer el parcial modelo. Tenés todas las herramientas disponibles. ¿Empezamos con los apuntes o directo al cuestionario?';
+  }
+}
+
+function setTpl(el, name) {
+  document.querySelectorAll('.tpl-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  switchGuiaMode(curGuiaMode); // refresh subtitle
+}
+
+function sendGuiaMsg() {
+  const input = document.getElementById('g-chat-in');
+  const text = input.value.trim();
+  if (!text) return;
+  const chat = document.getElementById('g-chat-msgs');
+  const msg = document.createElement('div');
+  msg.className = 'msg user';
+  msg.textContent = text;
+  chat.appendChild(msg);
+  input.value = '';
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => {
+    const reply = document.createElement('div');
+    reply.className = 'msg ai';
+    reply.innerHTML = '(Respuesta de la IA basada en los archivos de <strong>' + curSep.name + '</strong>.)';
+    chat.appendChild(reply);
+    chat.scrollTop = chat.scrollHeight;
+  }, 700);
+}
+
+// ─ MODALS ─
+function openNewNotebook() { document.getElementById('modal-notebook').classList.add('open'); document.getElementById('modal-name').focus(); }
+function openNewSep() { document.getElementById('modal-sep').classList.add('open'); document.getElementById('modal-sep-name').focus(); }
+function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open')); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) closeModals(); }));
+
+function createNotebook() {
+  const name = document.getElementById('modal-name').value.trim();
+  if (!name) return;
+  const g = document.getElementById('notebooks-grid');
+  const card = document.createElement('div');
+  card.className = 'notebook-card';
+  const bg = `linear-gradient(160deg,${selColorNb},${selColorNb}cc)`;
+  card.onclick = () => openNotebook(name, selColorNb, bg);
+  card.innerHTML = `<div class="notebook-book" style="background:${bg}"><div class="notebook-lines"><div class="notebook-line"></div><div class="notebook-line"></div><div class="notebook-line"></div></div><span class="notebook-status">En curso</span><div class="notebook-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 6.253v13"/></svg></div><div class="notebook-materia">${name}</div><div class="notebook-meta">0 separadores</div></div>`;
+  g.appendChild(card);
+  document.getElementById('modal-name').value = '';
+  closeModals();
+}
+
+function createSep() {
+  const name = document.getElementById('modal-sep-name').value.trim();
+  if (!name) return;
+  const g = document.getElementById('seps-grid');
+  const card = document.createElement('div');
+  card.className = 'separador-card';
+  card.onclick = () => openSeparador(name, selColorSep);
+  card.innerHTML = `<div class="sep-tab" style="background:${selColorSep}"></div><div class="sep-title">${name}</div><div class="sep-count">0 archivos · Recién creado</div><div class="sep-tags"></div>`;
+  g.appendChild(card);
+  document.getElementById('modal-sep-name').value = '';
+  closeModals();
+}
+</script>
+</body>
+</html>

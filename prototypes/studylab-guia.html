@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyLab — Guía de Estudio</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--v9:#1e0a3c;--v8:#2d1354;--v7:#3d1a6e;--v6:#5b2d9e;--v5:#7c3aed;--v4:#a855f7;--v3:#c084fc;--v2:#e9d5ff;--v1:#f5f0ff;--v0:#faf7ff;--g6:#6b7280;--g4:#9ca3af;--g2:#e5e7eb;--g1:#f3f4f6;--green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;--orange:#ea580c;--orange-bg:#fff7ed;--blue:#2563eb;--blue-bg:#eff6ff}
+body{font-family:'DM Sans',sans-serif;background:var(--v0);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 110%,rgba(168,85,247,.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--v9);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;z-index:100;box-shadow:4px 0 24px rgba(30,10,60,.15)}
+.sidebar-logo{width:40px;height:40px;background:var(--v5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;box-shadow:0 4px 16px rgba(124,58,237,.4)}
+.nav-item{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;color:rgba(255,255,255,.4);border:none;background:transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-item.active{background:var(--v6);color:#fff;box-shadow:0 4px 12px rgba(91,45,158,.5)}
+.nav-item svg{width:22px;height:22px}
+.nav-tooltip{position:absolute;left:calc(100%+12px);background:var(--v8);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-item:hover .nav-tooltip{opacity:1}
+.main{margin-left:72px;min-height:100vh;padding:36px 40px;position:relative;z-index:1}
+.view{display:none}.view.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* BREADCRUMB */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:24px;flex-wrap:wrap}
+.bc-item{font-weight:500;color:var(--v6);cursor:pointer}.bc-item:hover{color:var(--v5)}
+.bc-current{font-weight:700;color:var(--v9)}.bc-sep{color:var(--g2);font-size:16px}
+
+/* CONTEXT BANNER */
+.context-banner{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:14px;margin-bottom:28px;background:var(--v1);border:1.5px solid var(--v2)}
+.context-book{width:44px;height:56px;border-radius:2px 8px 8px 2px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.15);position:relative}
+.context-book::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:rgba(0,0,0,.15);border-radius:2px 0 0 2px}
+.context-materia{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9)}
+.context-sep{font-size:12px;color:var(--g6);margin-top:2px}
+
+/* MODE SELECTOR */
+.mode-section-title{font-size:12px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.mode-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+.mode-card{background:#fff;border-radius:16px;border:2px solid var(--g2);padding:22px 20px;cursor:pointer;transition:all .22s;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.mode-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(91,45,158,.12)}
+.mode-card.selected{border-color:var(--v5);background:var(--v1);box-shadow:0 0 0 4px rgba(124,58,237,.08)}
+.mode-card.cursada.selected{border-color:var(--v5)}
+.mode-card.examen.selected{border-color:var(--orange);background:#fff7ed;box-shadow:0 0 0 4px rgba(234,88,12,.08)}
+.mode-card.sprint.selected{border-color:#dc2626;background:#fef2f2;box-shadow:0 0 0 4px rgba(220,38,38,.08)}
+.mode-icon{font-size:28px;margin-bottom:10px}
+.mode-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--v9);margin-bottom:4px}
+.mode-desc{font-size:12px;color:var(--g6);line-height:1.5}
+.mode-tag{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-top:8px;text-transform:uppercase;letter-spacing:.04em}
+.cursada .mode-tag{background:var(--v1);color:var(--v6)}
+.examen .mode-tag{background:#fff7ed;color:var(--orange)}
+.sprint .mode-tag{background:#fef2f2;color:#dc2626}
+
+/* SPRINT DURATION PICKER */
+.sprint-picker{display:flex;gap:10px;margin-bottom:28px}
+.sprint-dur{flex:1;padding:16px;border-radius:12px;border:2px solid var(--g2);background:#fff;cursor:pointer;transition:all .2s;text-align:center}
+.sprint-dur:hover{border-color:#fca5a5;background:#fef2f2}
+.sprint-dur.active{border-color:#dc2626;background:#fef2f2}
+.sprint-dur-num{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:#dc2626}
+.sprint-dur-label{font-size:11px;font-weight:600;color:var(--g6);margin-top:2px}
+.sprint-dur-when{font-size:10px;color:var(--g4);margin-top:4px}
+
+/* PLAN LAYOUT */
+.plan-layout{display:grid;grid-template-columns:1fr 300px;gap:20px}
+
+/* BLOQUES */
+.bloques-list{display:flex;flex-direction:column;gap:14px}
+.bloque-card{background:#fff;border-radius:16px;border:1.5px solid var(--g2);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.bloque-header{padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.bloque-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:#fff;flex-shrink:0}
+.bloque-title-wrap{flex:1}
+.bloque-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9)}
+.bloque-subtitle{font-size:12px;color:var(--g6);margin-top:2px}
+.bloque-progress{display:flex;align-items:center;gap:8px;margin-right:8px}
+.bloque-prog-text{font-size:11px;font-weight:600;color:var(--g4)}
+.bloque-chevron{color:var(--g4);transition:transform .25s}
+.bloque-chevron.open{transform:rotate(180deg)}
+.bloque-chevron svg{width:18px;height:18px}
+.bloque-body{display:none;border-top:1px solid var(--g2);padding:16px 20px}
+.bloque-body.open{display:block}
+
+/* PASOS */
+.pasos-list{display:flex;flex-direction:column;gap:10px}
+.paso-item{display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:12px;border:1.5px solid var(--g2);background:#fff;transition:all .2s;cursor:pointer}
+.paso-item:hover{border-color:var(--v3);background:var(--v1)}
+.paso-item.done{background:var(--green-bg);border-color:var(--green-border)}
+.paso-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--g2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:2px}
+.paso-item.done .paso-check{background:var(--green);border-color:var(--green)}
+.paso-item.done .paso-check::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.paso-item:not(.done):hover .paso-check{border-color:var(--v4)}
+.paso-content{flex:1}
+.paso-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.paso-title{font-size:14px;font-weight:700;color:var(--v9)}
+.paso-item.done .paso-title{text-decoration:line-through;color:var(--g4)}
+.paso-duracion{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--g1);color:var(--g6)}
+.paso-desc{font-size:12px;color:var(--g6);line-height:1.6}
+.paso-item.done .paso-desc{color:var(--g4)}
+.paso-tecnica{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px}
+.tecnica-active-recall{background:#fdf4ff;color:#7e22ce}
+.tecnica-espaciado{background:var(--blue-bg);color:var(--blue)}
+.tecnica-elaboracion{background:#f0fdf4;color:var(--green)}
+.tecnica-simulacro{background:#fff7ed;color:var(--orange)}
+.tecnica-lectura{background:var(--g1);color:var(--g6)}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:14px}
+
+/* PROGRESS BOX */
+.progress-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.pb-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--v9);margin-bottom:14px}
+.pb-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pb-stat-label{font-size:12px;color:var(--g6)}
+.pb-stat-val{font-size:13px;font-weight:700;color:var(--v9)}
+.pb-bar-wrap{height:8px;background:var(--g2);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.pb-bar{height:100%;border-radius:4px;transition:width .4s ease}
+.pb-reset{width:100%;padding:8px;border-radius:9px;border:1.5px solid var(--g2);background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--g6);cursor:pointer;transition:all .2s}
+.pb-reset:hover{border-color:#fca5a5;color:#dc2626;background:#fef2f2}
+
+/* REFERENCIA RÁPIDA */
+.ref-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.ref-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--v9);margin-bottom:14px}
+.ref-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:9px;margin-bottom:6px;font-size:12px;cursor:pointer;transition:background .15s}
+.ref-row:hover{background:var(--g1)}
+.ref-row:last-child{margin-bottom:0}
+.ref-situation{color:var(--v9);font-weight:500}
+.ref-mode-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
+.ref-mode-badge.cursada{background:var(--v1);color:var(--v6)}
+.ref-mode-badge.examen{background:#fff7ed;color:var(--orange)}
+.ref-mode-badge.sprint-7{background:#fef2f2;color:#dc2626}
+.ref-mode-badge.sprint-4{background:#fef2f2;color:#dc2626}
+.ref-mode-badge.sprint-2{background:#fef2f2;color:#dc2626}
+
+/* TECNICAS INFO */
+.tecnicas-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.tec-item{padding:10px 0;border-bottom:1px solid var(--g1)}
+.tec-item:last-child{border-bottom:none;padding-bottom:0}
+.tec-name{font-size:12px;font-weight:700;color:var(--v9);margin-bottom:3px}
+.tec-desc{font-size:11px;color:var(--g6);line-height:1.5}
+
+/* CHECKLIST (modo examen) */
+.checklist-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.cl-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--v9);margin-bottom:14px}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--g1);cursor:pointer}
+.cl-item:last-child{border-bottom:none}
+.cl-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--g2);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s}
+.cl-item.done .cl-check{background:var(--green);border-color:var(--green)}
+.cl-item.done .cl-check::after{content:'✓';color:#fff;font-size:10px;font-weight:700}
+.cl-text{font-size:12px;color:var(--v9);line-height:1.4}
+.cl-item.done .cl-text{text-decoration:line-through;color:var(--g4)}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">SL</div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg><span class="nav-tooltip">Inicio</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg><span class="nav-tooltip">Calendario</span></button>
+  <button class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span class="nav-tooltip">Cuadernos</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10"/></svg><span class="nav-tooltip">Historial</span></button>
+  <div style="flex:1"></div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-tooltip">Configuración</span></button>
+</nav>
+
+<main class="main">
+<div id="view-guia" class="view active">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <span class="bc-item">Cuadernos</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-item">Genética Molecular</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-item">Unidad 1 — Estructura del ADN</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-current">Guía de Estudio</span>
+  </div>
+
+  <!-- CONTEXT BANNER -->
+  <div class="context-banner">
+    <div class="context-book" style="background:linear-gradient(160deg,#5b2d9e,#7c3aed)"></div>
+    <div>
+      <div class="context-materia">Genética Molecular</div>
+      <div class="context-sep">Unidad 1 — Estructura del ADN · Guía de estudio personal</div>
+    </div>
+  </div>
+
+  <!-- MODE SELECTOR -->
+  <div class="mode-section-title">Seleccioná el modo según el momento del cuatrimestre</div>
+  <div class="mode-cards">
+    <div class="mode-card cursada selected" onclick="selectMode('cursada')">
+      <div class="mode-icon">📘</div>
+      <div class="mode-title">Cursada</div>
+      <div class="mode-desc">Para usar semana a semana después de cada clase. Tres bloques espaciados para consolidar sin agobiarte.</div>
+      <span class="mode-tag">Semana a semana</span>
+    </div>
+    <div class="mode-card examen" onclick="selectMode('examen')">
+      <div class="mode-icon">📝</div>
+      <div class="mode-title">Examen</div>
+      <div class="mode-desc">Para activar 2–3 semanas antes del parcial. Diagnóstico, práctica intensiva y simulacros reales.</div>
+      <span class="mode-tag">2–3 semanas antes</span>
+    </div>
+    <div class="mode-card sprint" onclick="selectMode('sprint')">
+      <div class="mode-icon">🏃</div>
+      <div class="mode-title">Sprint</div>
+      <div class="mode-desc">Para cuando el tiempo apremia. Planes quirúrgicos de 7, 4 o 2 días con priorización por peso.</div>
+      <span class="mode-tag">Días contados</span>
+    </div>
+  </div>
+
+  <!-- SPRINT DURATION (solo visible en modo sprint) -->
+  <div id="sprint-picker" style="display:none">
+    <div class="mode-section-title">¿Cuántos días tenés?</div>
+    <div class="sprint-picker">
+      <div class="sprint-dur active" onclick="selectSprint(7, this)">
+        <div class="sprint-dur-num">7</div>
+        <div class="sprint-dur-label">días</div>
+        <div class="sprint-dur-when">Empecé tarde</div>
+      </div>
+      <div class="sprint-dur" onclick="selectSprint(4, this)">
+        <div class="sprint-dur-num">4</div>
+        <div class="sprint-dur-label">días</div>
+        <div class="sprint-dur-when">Tiempo justo</div>
+      </div>
+      <div class="sprint-dur" onclick="selectSprint(2, this)">
+        <div class="sprint-dur-num">2</div>
+        <div class="sprint-dur-label">días</div>
+        <div class="sprint-dur-when">Modo pánico</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAN + SIDEBAR -->
+  <div class="plan-layout">
+
+    <!-- BLOQUES DEL PLAN -->
+    <div class="bloques-list" id="bloques-container">
+      <!-- generado por JS -->
+    </div>
+
+    <!-- PANEL DERECHO -->
+    <div class="right-panel">
+
+      <!-- PROGRESO -->
+      <div class="progress-box">
+        <div class="pb-title">Tu progreso</div>
+        <div class="pb-stat">
+          <span class="pb-stat-label">Pasos completados</span>
+          <span class="pb-stat-val" id="prog-pasos">0 / 0</span>
+        </div>
+        <div class="pb-bar-wrap">
+          <div class="pb-bar" id="prog-bar" style="width:0%;background:linear-gradient(90deg,var(--v6),var(--v5))"></div>
+        </div>
+        <div class="pb-stat" style="margin-bottom:0">
+          <span class="pb-stat-label">Modo activo</span>
+          <span class="pb-stat-val" id="prog-modo">Cursada</span>
+        </div>
+        <button class="pb-reset" style="margin-top:14px" onclick="resetProgress()">Reiniciar progreso</button>
+      </div>
+
+      <!-- REFERENCIA RÁPIDA -->
+      <div class="ref-box">
+        <div class="ref-title">Referencia rápida</div>
+        <div class="ref-row" onclick="selectMode('cursada')"><span class="ref-situation">Después de cada clase</span><span class="ref-mode-badge cursada">Cursada</span></div>
+        <div class="ref-row" onclick="selectMode('cursada')"><span class="ref-situation">3–7 días después</span><span class="ref-mode-badge cursada">Cursada</span></div>
+        <div class="ref-row" onclick="selectMode('examen')"><span class="ref-situation">Parcial en 3 semanas</span><span class="ref-mode-badge examen">Examen</span></div>
+        <div class="ref-row" onclick="selectMode('examen')"><span class="ref-situation">Parcial en 1–2 semanas</span><span class="ref-mode-badge examen">Examen</span></div>
+        <div class="ref-row" onclick="selectMode('sprint');selectSprint(7)"><span class="ref-situation">Parcial en 7 días</span><span class="ref-mode-badge sprint-7">Sprint 7d</span></div>
+        <div class="ref-row" onclick="selectMode('sprint');selectSprint(4)"><span class="ref-situation">Parcial en 4 días</span><span class="ref-mode-badge sprint-4">Sprint 4d</span></div>
+        <div class="ref-row" onclick="selectMode('sprint');selectSprint(2)"><span class="ref-situation">Parcial mañana pasado</span><span class="ref-mode-badge sprint-2">Sprint 2d</span></div>
+      </div>
+
+      <!-- CHECKLIST PRE-PARCIAL (solo en modo examen) -->
+      <div class="checklist-box" id="checklist-box" style="display:none">
+        <div class="cl-title">Checklist pre-parcial</div>
+        <div class="cl-item" onclick="this.classList.toggle('done')"><div class="cl-check"></div><div class="cl-text">Hice el inventario y no quedan temas en 🔴</div></div>
+        <div class="cl-item" onclick="this.classList.toggle('done')"><div class="cl-check"></div><div class="cl-text">Hice al menos 1 simulacro completo en condiciones reales</div></div>
+        <div class="cl-item" onclick="this.classList.toggle('done')"><div class="cl-check"></div><div class="cl-text">Sé qué tipo de preguntas suele tomar el docente</div></div>
+        <div class="cl-item" onclick="this.classList.toggle('done')"><div class="cl-check"></div><div class="cl-text">Tengo claros los conceptos que más se interconectan</div></div>
+        <div class="cl-item" onclick="this.classList.toggle('done')"><div class="cl-check"></div><div class="cl-text">Dormí bien las últimas 2 noches</div></div>
+      </div>
+
+      <!-- TÉCNICAS -->
+      <div class="tecnicas-box">
+        <div class="ref-title">Técnicas usadas</div>
+        <div class="tec-item"><div class="tec-name">🧠 Active Recall</div><div class="tec-desc">Recordar sin mirar. El esfuerzo de recuperar es lo que consolida.</div></div>
+        <div class="tec-item"><div class="tec-name">📅 Espaciado</div><div class="tec-desc">Sesiones distribuidas en el tiempo valen más que un maratón.</div></div>
+        <div class="tec-item"><div class="tec-name">🔗 Elaboración</div><div class="tec-desc">Conectar lo nuevo con lo que ya sabés. Más conexiones = más retención.</div></div>
+        <div class="tec-item"><div class="tec-name">📋 Simulacro</div><div class="tec-desc">Practicar en condiciones reales antes del parcial real.</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+// ── DATOS DE LOS PLANES ──
+const PLANES = {
+  cursada: [
+    {
+      id:'b1', title:'Bloque 1 — Procesamiento', subtitle:'Mismo día o al día siguiente de la clase', color:'#7c3aed',
+      pasos:[
+        {id:'b1p1', title:'Volcado libre', dur:'10 min', desc:'Sin mirar los apuntes, escribí todo lo que recordás de la clase. No importa si está desordenado.', tecnica:'active-recall'},
+        {id:'b1p2', title:'Revisión y corrección', dur:'15 min', desc:'Abrí los apuntes. Marcá en color diferente lo que te faltó o estaba mal. No reescribas lo que ya tenías bien.', tecnica:'lectura'},
+        {id:'b1p3', title:'Pregunta central', dur:'5 min', desc:'Escribí una sola pregunta que capture la idea principal de la clase. Será tu ancla para el repaso posterior.', tecnica:'elaboracion'},
+        {id:'b1p4', title:'Conexión con temas anteriores', dur:'10 min', desc:'Escribí 2–3 conexiones entre el tema de hoy y temas que ya viste.', tecnica:'elaboracion'},
+      ]
+    },
+    {
+      id:'b2', title:'Bloque 2 — Profundización', subtitle:'2–3 días después del Bloque 1', color:'#5b2d9e',
+      pasos:[
+        {id:'b2p1', title:'Active Recall sin apuntes', dur:'10 min', desc:'Respondé la pregunta central que escribiste. Solo después de intentarlo, revisás tus apuntes.', tecnica:'active-recall'},
+        {id:'b2p2', title:'Elaboración escrita', dur:'20 min', desc:'Explicá el concepto más difícil como si se lo explicaras a alguien que no sabe nada del tema.', tecnica:'elaboracion'},
+        {id:'b2p3', title:'Ejercicios / Preguntas de comprensión', dur:'20 min', desc:'Exactas: 2 ejercicios sin mirar el procedimiento. Biológicas: 3 preguntas de nivel creciente (definición → mecanismo → aplicación).', tecnica:'active-recall'},
+      ]
+    },
+    {
+      id:'b3', title:'Bloque 3 — Repaso espaciado', subtitle:'7 días después del Bloque 1', color:'#a855f7',
+      pasos:[
+        {id:'b3p1', title:'Test rápido sin mirar', dur:'15 min', desc:'Respondé por escrito: la pregunta central, los 3 conceptos más importantes, y una conexión con otro tema.', tecnica:'active-recall'},
+        {id:'b3p2', title:'Revisión selectiva', dur:'15 min', desc:'Revisá solo lo que no recordaste bien. No releas todo.', tecnica:'espaciado'},
+        {id:'b3p3', title:'Actualización del resumen', dur:'10 min', desc:'Agregá al resumen solo lo que aprendiste nuevo hoy. Los resúmenes crecen, no se reescriben.', tecnica:'elaboracion'},
+      ]
+    }
+  ],
+  examen: [
+    {
+      id:'e1', title:'Semana −3 — Diagnóstico y mapa', subtitle:'Tres semanas antes del parcial', color:'#d97706',
+      pasos:[
+        {id:'e1p1', title:'Inventario del programa', dur:'45 min', desc:'Listá todos los temas. Asignate 🟢 (lo sé), 🟡 (más o menos) o 🔴 (no lo sé). Hacé un test rápido de cada uno antes de asignar.', tecnica:'active-recall'},
+        {id:'e1p2', title:'Consolidar temas 🟡', dur:'45 min/día × 4', desc:'Empezá por los amarillos. Ya tenés base, solo necesitan refuerzo. Usá el Bloque 2 de Cursada para cada uno.', tecnica:'espaciado'},
+      ]
+    },
+    {
+      id:'e2', title:'Semana −2 — Relleno y práctica', subtitle:'Dos semanas antes del parcial', color:'#ea580c',
+      pasos:[
+        {id:'e2p1', title:'Atacar temas 🔴', dur:'60 min/día × 3', desc:'Leer una fuente → cerrar → escribir → volver a leer para llenar huecos → Bloque 2. Si hay muchos, priorizá por peso en el parcial.', tecnica:'active-recall'},
+        {id:'e2p2', title:'Práctica integrada', dur:'60 min/día × 2', desc:'Exactas: parciales viejos en condiciones reales. Biológicas: preguntas que integren varios temas entre sí.', tecnica:'simulacro'},
+        {id:'e2p3', title:'Repaso de temas 🟢', dur:'30 min/día × 2', desc:'Un test rápido de 5 minutos por tema para confirmar que siguen consolidados.', tecnica:'espaciado'},
+      ]
+    },
+    {
+      id:'e3', title:'Semana −1 — Afinado final', subtitle:'Una semana antes del parcial', color:'#dc2626',
+      pasos:[
+        {id:'e3p1', title:'Simulacros completos', dur:'60 min/día × 3', desc:'Al menos 2 simulacros completos en condiciones reales. Corregí y anotá qué falló. No vuelvas a estudiar todo — solo lo que falló.', tecnica:'simulacro'},
+        {id:'e3p2', title:'Repaso final selectivo', dur:'45 min/día × 2', desc:'Solo los temas que siguen flojos después de los simulacros. No toques lo que ya salió bien.', tecnica:'espaciado'},
+        {id:'e3p3', title:'Repaso ultraligero', dur:'20 min', desc:'Solo leé tus preguntas centrales de cada tema. No estudies contenido nuevo.', tecnica:'active-recall'},
+        {id:'e3p4', title:'Descanso total', dur:'Día previo', desc:'No estudies. El cerebro consolida mientras descansás. Dormir bien vale más que cualquier repaso de última hora.', tecnica:'espaciado'},
+      ]
+    }
+  ],
+  sprint7: [
+    {
+      id:'s7d1', title:'Día 1 — Diagnóstico brutal', subtitle:'Ser honesto y rápido', color:'#dc2626',
+      pasos:[
+        {id:'s7p1', title:'Inventario y decisiones difíciles', dur:'2 hs', desc:'Inventario en 1 hora. Marcá "sacrificio consciente" los temas de bajo peso. Mejor dominar el 70% que tener el 100% a medias.', tecnica:'active-recall'},
+      ]
+    },
+    {
+      id:'s7d23', title:'Días 2–3 — Temas de mayor peso', subtitle:'Los que siempre entran en el parcial', color:'#dc2626',
+      pasos:[
+        {id:'s7p2', title:'Estudiar en profundidad los 3–4 temas clave', dur:'2–3 hs/día', desc:'Solo los temas de mayor probabilidad. Usá el Bloque 2 de Cursada para cada uno.', tecnica:'active-recall'},
+      ]
+    },
+    {
+      id:'s7d45', title:'Días 4–5 — Temas secundarios', subtitle:'Nivel concepto general', color:'#ef4444',
+      pasos:[
+        {id:'s7p3', title:'Cobertura superficial de temas secundarios', dur:'2 hs/día', desc:'Suficiente para no dejar la pregunta en blanco. No en detalle.', tecnica:'lectura'},
+      ]
+    },
+    {
+      id:'s7d6', title:'Día 6 — Simulacro', subtitle:'Condiciones reales', color:'#f97316',
+      pasos:[
+        {id:'s7p4', title:'Parcial viejo completo sin consultar', dur:'2 hs', desc:'Corregí. Anotá qué falló. No vuelvas a estudiar todo — solo lo que salió mal.', tecnica:'simulacro'},
+      ]
+    },
+    {
+      id:'s7d7', title:'Día 7 — Repaso y descanso', subtitle:'Día del parcial', color:'#22c55e',
+      pasos:[
+        {id:'s7p5', title:'Repaso de lo que falló en el simulacro', dur:'1 hs', desc:'Solo los puntos débiles detectados ayer. Nada más.', tecnica:'active-recall'},
+        {id:'s7p6', title:'Descanso', dur:'Resto del día', desc:'Comé bien. Dormí. El pánico consume energía que necesitás para rendir.', tecnica:'espaciado'},
+      ]
+    }
+  ],
+  sprint4: [
+    {id:'s4d1', title:'Día 1 — Triage', subtitle:'Ser quirúrgico', color:'#dc2626', pasos:[{id:'s4p1', title:'Inventario rápido + estudio de temas prioritarios', dur:'1 hs + 2 hs', desc:'Mirá el programa y parciales viejos. Decidí qué temas tienen mayor probabilidad. Estudiá solo esos.', tecnica:'active-recall'}]},
+    {id:'s4d2', title:'Día 2 — Profundizar', subtitle:'Continuar con temas prioritarios', color:'#dc2626', pasos:[{id:'s4p2', title:'Profundización + ejercicios o preguntas', dur:'3 hs', desc:'Exactas: ejercicios. Biológicas: preguntas de nivel 2 y 3.', tecnica:'active-recall'}]},
+    {id:'s4d3', title:'Día 3 — Huecos + simulacro', subtitle:'Cubrir lo crítico y practicar', color:'#f97316', pasos:[{id:'s4p3', title:'Cubrir temas 🔴 prioritarios', dur:'2 hs', desc:'Por la mañana: los temas críticos que quedan en rojo.', tecnica:'lectura'},{id:'s4p4', title:'Simulacro parcial', dur:'1 hs', desc:'La mitad de un parcial viejo. Corregí.', tecnica:'simulacro'}]},
+    {id:'s4d4', title:'Día 4 — Día del parcial', subtitle:'Máximo 1 hora de estudio', color:'#22c55e', pasos:[{id:'s4p5', title:'Repaso ultraligero y descanso', dur:'1 hs máx', desc:'Solo tus preguntas centrales y conceptos clave. Comé bien. Llegá descansado.', tecnica:'active-recall'}]},
+  ],
+  sprint2: [
+    {id:'s2m', title:'Día 1 — Mañana', subtitle:'Los 3 temas más probables', color:'#dc2626', pasos:[{id:'s2p1', title:'Estudiar los 3 temas de mayor peso', dur:'3 hs', desc:'Leer → cerrar → escribir todo lo que recordás → volver a leer para completar → repetir.', tecnica:'active-recall'}]},
+    {id:'s2t', title:'Día 1 — Tarde', subtitle:'Cobertura superficial', color:'#ef4444', pasos:[{id:'s2p2', title:'Dos temas más a nivel concepto', dur:'2 hs', desc:'Solo los conceptos principales. Suficiente para escribir algo coherente si aparecen.', tecnica:'lectura'}]},
+    {id:'s2n', title:'Día 1 — Noche', subtitle:'Obligatorio', color:'#22c55e', pasos:[{id:'s2p3', title:'Dormir', dur:'Toda la noche', desc:'Estudiar de noche con el cerebro agotado tiene retorno casi nulo. El sueño consolida la memoria.', tecnica:'espaciado'}]},
+    {id:'s2f', title:'Día 2 — Día del parcial', subtitle:'Mañana antes del examen', color:'#f97316', pasos:[{id:'s2p4', title:'Repaso ultraligero', dur:'1 hs máx', desc:'Solo las preguntas centrales de los 3 temas principales. No intentes aprender nada nuevo.', tecnica:'active-recall'}]},
+  ]
+}
+
+const TECNICA_LABELS = {
+  'active-recall':'🧠 Active Recall',
+  'espaciado':'📅 Espaciado',
+  'elaboracion':'🔗 Elaboración',
+  'simulacro':'📋 Simulacro',
+  'lectura':'📖 Lectura activa'
+}
+
+let currentMode = 'cursada'
+let currentSprint = 7
+let completedSteps = new Set()
+
+function getPlanKey() {
+  if (currentMode === 'sprint') return `sprint${currentSprint}`
+  return currentMode
+}
+
+function selectMode(mode) {
+  currentMode = mode
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'))
+  document.querySelector(`.mode-card.${mode}`).classList.add('selected')
+  document.getElementById('sprint-picker').style.display = mode === 'sprint' ? 'block' : 'none'
+  document.getElementById('checklist-box').style.display = mode === 'examen' ? 'block' : 'none'
+  document.getElementById('prog-modo').textContent = mode === 'cursada' ? 'Cursada' : mode === 'examen' ? 'Examen' : `Sprint ${currentSprint}d`
+  renderBloques()
+}
+
+function selectSprint(days, el) {
+  currentSprint = days
+  document.querySelectorAll('.sprint-dur').forEach(d => d.classList.remove('active'))
+  if (el) el.classList.add('active')
+  else document.querySelectorAll('.sprint-dur')[days === 7 ? 0 : days === 4 ? 1 : 2].classList.add('active')
+  document.getElementById('prog-modo').textContent = `Sprint ${days}d`
+  renderBloques()
+}
+
+function renderBloques() {
+  const key = getPlanKey()
+  const plan = PLANES[key] || []
+  const container = document.getElementById('bloques-container')
+  container.innerHTML = ''
+
+  const modeColors = {cursada:'#7c3aed', examen:'#ea580c', sprint:'#dc2626'}
+  const baseColor = modeColors[currentMode] || '#7c3aed'
+
+  plan.forEach((bloque, bi) => {
+    const pasosDone = bloque.pasos.filter(p => completedSteps.has(p.id)).length
+    const card = document.createElement('div')
+    card.className = 'bloque-card'
+    card.innerHTML = `
+      <div class="bloque-header" onclick="toggleBloque(this)">
+        <div class="bloque-num" style="background:${bloque.color}">${bi + 1}</div>
+        <div class="bloque-title-wrap">
+          <div class="bloque-title">${bloque.title}</div>
+          <div class="bloque-subtitle">${bloque.subtitle}</div>
+        </div>
+        <div class="bloque-progress">
+          <span class="bloque-prog-text">${pasosDone}/${bloque.pasos.length}</span>
+        </div>
+        <div class="bloque-chevron${bi === 0 ? ' open' : ''}">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M19 9l-7 7-7-7"/></svg>
+        </div>
+      </div>
+      <div class="bloque-body${bi === 0 ? ' open' : ''}">
+        <div class="pasos-list">
+          ${bloque.pasos.map(paso => `
+            <div class="paso-item${completedSteps.has(paso.id) ? ' done' : ''}" onclick="togglePaso('${paso.id}', this)">
+              <div class="paso-check"></div>
+              <div class="paso-content">
+                <div class="paso-header">
+                  <span class="paso-title">${paso.title}</span>
+                  <span class="paso-duracion">⏱ ${paso.dur}</span>
+                </div>
+                <div class="paso-desc">${paso.desc}</div>
+                <span class="paso-tecnica tecnica-${paso.tecnica}">${TECNICA_LABELS[paso.tecnica]}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `
+    container.appendChild(card)
+  })
+  updateProgress()
+}
+
+function toggleBloque(header) {
+  const body = header.nextElementSibling
+  const chevron = header.querySelector('.bloque-chevron')
+  body.classList.toggle('open')
+  chevron.classList.toggle('open')
+}
+
+function togglePaso(id, el) {
+  if (completedSteps.has(id)) completedSteps.delete(id)
+  else completedSteps.add(id)
+  el.classList.toggle('done')
+  updateProgress()
+  // Update bloque header counter
+  const bloquebody = el.closest('.bloque-body')
+  const bloqueheader = bloquebody.previousElementSibling
+  const pasos = bloquebody.querySelectorAll('.paso-item')
+  const done = bloquebody.querySelectorAll('.paso-item.done').length
+  bloqueheader.querySelector('.bloque-prog-text').textContent = `${done}/${pasos.length}`
+}
+
+function updateProgress() {
+  const key = getPlanKey()
+  const plan = PLANES[key] || []
+  const total = plan.reduce((acc, b) => acc + b.pasos.length, 0)
+  const done = plan.reduce((acc, b) => acc + b.pasos.filter(p => completedSteps.has(p.id)).length, 0)
+  document.getElementById('prog-pasos').textContent = `${done} / ${total}`
+  const pct = total > 0 ? (done / total * 100) : 0
+  document.getElementById('prog-bar').style.width = pct + '%'
+  const colors = {cursada:'linear-gradient(90deg,var(--v6),var(--v5))', examen:'linear-gradient(90deg,#c2410c,#ea580c)', sprint:'linear-gradient(90deg,#b91c1c,#dc2626)'}
+  document.getElementById('prog-bar').style.background = colors[currentMode] || colors.cursada
+}
+
+function resetProgress() {
+  if (!confirm('¿Reiniciar el progreso de este modo?')) return
+  const key = getPlanKey()
+  const plan = PLANES[key] || []
+  plan.forEach(b => b.pasos.forEach(p => completedSteps.delete(p.id)))
+  renderBloques()
+}
+
+// Init
+renderBloques()
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyLab — Calendario</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--v9:#1e0a3c;--v8:#2d1354;--v7:#3d1a6e;--v6:#5b2d9e;--v5:#7c3aed;--v4:#a855f7;--v3:#c084fc;--v2:#e9d5ff;--v1:#f5f0ff;--v0:#faf7ff;--g6:#6b7280;--g4:#9ca3af;--g2:#e5e7eb;--g1:#f3f4f6;--green:#16a34a;--green-bg:#f0fdf4;--orange:#ea580c;--orange-bg:#fff7ed;--red:#dc2626;--red-bg:#fef2f2;--blue:#2563eb;--blue-bg:#eff6ff;--teal:#0d9488;--teal-bg:#f0fdfa}
+body{font-family:'DM Sans',sans-serif;background:var(--v0);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 110%,rgba(168,85,247,.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--v9);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;z-index:100;box-shadow:4px 0 24px rgba(30,10,60,.15)}
+.sidebar-logo{width:40px;height:40px;background:var(--v5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;box-shadow:0 4px 16px rgba(124,58,237,.4)}
+.nav-item{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;color:rgba(255,255,255,.4);border:none;background:transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-item.active{background:var(--v6);color:#fff;box-shadow:0 4px 12px rgba(91,45,158,.5)}
+.nav-item svg{width:22px;height:22px}
+.nav-tooltip{position:absolute;left:calc(100% + 12px);background:var(--v8);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-item:hover .nav-tooltip{opacity:1}
+.main{margin-left:72px;min-height:100vh;padding:36px 40px;position:relative;z-index:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER */
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;animation:fadeUp .4s ease both}
+.page-title{font-family:'Fraunces',serif;font-size:32px;font-weight:600;color:var(--v9)}
+.header-controls{display:flex;align-items:center;gap:10px}
+.view-toggle{display:flex;background:#fff;border:1.5px solid var(--g2);border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.vt-btn{padding:9px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--g4);transition:all .2s}
+.vt-btn.active{background:var(--v5);color:#fff}
+.btn-new-event{display:flex;align-items:center;gap:7px;background:var(--v5);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(124,58,237,.3);transition:all .2s}
+.btn-new-event:hover{background:var(--v6);transform:translateY(-1px)}
+.btn-new-event svg{width:16px;height:16px}
+.nav-month{display:flex;align-items:center;gap:8px}
+.nav-month-label{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9);min-width:160px;text-align:center}
+.nav-arrow{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--g2);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;color:var(--g4)}
+.nav-arrow:hover{border-color:var(--v3);color:var(--v5);background:var(--v1)}
+.nav-arrow svg{width:16px;height:16px}
+
+/* LAYOUT */
+.cal-layout{display:grid;grid-template-columns:1fr 300px;gap:20px;animation:fadeUp .4s ease both .1s}
+
+/* CALENDAR GRID */
+.cal-card{background:#fff;border-radius:18px;border:1.5px solid var(--g2);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--g2)}
+.cal-wd{padding:10px 0;text-align:center;font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.06em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-day{min-height:96px;padding:8px;border-right:1px solid var(--g1);border-bottom:1px solid var(--g1);cursor:pointer;transition:background .15s;position:relative}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day:hover{background:var(--v0)}
+.cal-day.other-month{opacity:.35}
+.cal-day.today{background:var(--v1)}
+.cal-day-num{font-size:13px;font-weight:700;color:var(--v9);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-bottom:4px}
+.cal-day.today .cal-day-num{background:var(--v5);color:#fff}
+.cal-day.selected .cal-day-num{background:var(--v2);color:var(--v7)}
+.cal-event{font-size:10px;font-weight:600;padding:3px 6px;border-radius:5px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;line-height:1.3}
+.cal-event.clase{background:#ede9fe;color:var(--v6)}
+.cal-event.parcial{background:#fef2f2;color:var(--red)}
+.cal-event.tarea{background:#f0fdf4;color:var(--green)}
+.cal-event.personal{background:var(--orange-bg);color:var(--orange)}
+.cal-event.sprint{background:#fef9c3;color:#854d0e}
+.cal-more{font-size:10px;color:var(--g4);font-weight:500;padding:1px 4px}
+
+/* WEEKLY VIEW */
+.week-view{display:none}
+.week-view.visible{display:block}
+.month-view.hidden{display:none}
+.week-grid{display:grid;grid-template-columns:52px repeat(7,1fr);border-top:1px solid var(--g2)}
+.week-hour{padding:6px 8px;font-size:10px;font-weight:600;color:var(--g4);text-align:right;border-right:1px solid var(--g2);border-bottom:1px solid var(--g1)}
+.week-col-header{padding:8px 4px;text-align:center;border-right:1px solid var(--g1);border-bottom:1px solid var(--g2)}
+.week-col-header-day{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase}
+.week-col-header-num{font-size:18px;font-weight:700;color:var(--v9);margin-top:2px}
+.week-col-header-num.today{background:var(--v5);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;margin:2px auto 0}
+.week-cell{border-right:1px solid var(--g1);border-bottom:1px solid var(--g1);min-height:44px;padding:2px;position:relative}
+.week-event{font-size:10px;font-weight:600;padding:4px 6px;border-radius:6px;margin-bottom:2px;line-height:1.3}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:16px}
+
+/* DAY DETAIL */
+.day-detail{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.day-detail-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9);margin-bottom:16px}
+.event-list-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--g1)}
+.event-list-item:last-child{border-bottom:none}
+.event-time-dot{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:36px}
+.event-time-text{font-size:11px;font-weight:700;color:var(--v6)}
+.event-dot-line{width:2px;flex:1;background:var(--g2);min-height:16px;border-radius:2px}
+.ev-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.ev-info{}
+.ev-name{font-size:13px;font-weight:700;color:var(--v9)}
+.ev-detail{font-size:11px;color:var(--g4);margin-top:2px}
+.ev-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:4px}
+
+/* TODO */
+.todo-box{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:20px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.todo-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.todo-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9)}
+.todo-date{font-size:11px;color:var(--g4);font-weight:500}
+.todo-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--g1);cursor:pointer}
+.todo-item:last-child{border-bottom:none}
+.todo-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--g2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.todo-item:hover .todo-check{border-color:var(--v4)}
+.todo-item.done .todo-check{background:var(--v5);border-color:var(--v5)}
+.todo-item.done .todo-check::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.todo-text{font-size:13px;font-weight:500;color:var(--v9);flex:1;line-height:1.3}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--g4)}
+.todo-cat{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.add-todo-btn{display:flex;align-items:center;gap:7px;margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--g1);cursor:pointer;font-size:12px;color:var(--g4);font-weight:500;border:1.5px dashed var(--g2);width:100%;transition:all .2s}
+.add-todo-btn:hover{background:var(--v1);color:var(--v5);border-color:var(--v3)}
+
+/* EVENT MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,10,60,.4);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:32px;width:420px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:fadeUp .25s ease}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--v9);margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.form-label{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.06em}
+.form-input,.form-select{border:1.5px solid var(--g2);border-radius:10px;padding:10px 13px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--v9);outline:none;transition:border-color .2s;background:#fff;width:100%}
+.form-input:focus,.form-select:focus{border-color:var(--v4)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.btn-cancel{padding:10px 18px;border-radius:10px;border:1.5px solid var(--g2);background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--g6)}
+.btn-save{padding:10px 22px;border-radius:10px;border:none;background:var(--v5);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,.3)}
+
+/* TYPE COLOR DOTS */
+.type-options{display:flex;gap:8px;flex-wrap:wrap}
+.type-opt{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--g2);cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.type-opt.selected{border-color:currentColor}
+.type-dot{width:10px;height:10px;border-radius:50%}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">SL</div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg><span class="nav-tooltip">Inicio</span></button>
+  <button class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg><span class="nav-tooltip">Calendario</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span class="nav-tooltip">Cuadernos</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="nav-tooltip">Historial</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg><span class="nav-tooltip">Guía de Estudio</span></button>
+  <div style="flex:1"></div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-tooltip">Configuración</span></button>
+</nav>
+
+<main class="main">
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-title">Calendario 📅</div>
+    <div class="header-controls">
+      <div class="nav-month">
+        <div class="nav-arrow" onclick="changeMonth(-1)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M15 19l-7-7 7-7"/></svg></div>
+        <div class="nav-month-label" id="month-label">Febrero 2026</div>
+        <div class="nav-arrow" onclick="changeMonth(1)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M9 5l7 7-7 7"/></svg></div>
+      </div>
+      <div class="view-toggle">
+        <button class="vt-btn active" id="vt-mes" onclick="setView('mes')">Mes</button>
+        <button class="vt-btn" id="vt-semana" onclick="setView('semana')">Semana</button>
+        <button class="vt-btn" id="vt-dia" onclick="setView('dia')">Día</button>
+      </div>
+      <button class="btn-new-event" onclick="openModal()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+        Crear evento
+      </button>
+    </div>
+  </div>
+
+  <div class="cal-layout">
+    <!-- CALENDAR -->
+    <div class="cal-card">
+      <!-- MONTH VIEW -->
+      <div id="month-view">
+        <div class="cal-weekdays">
+          <div class="cal-wd">Lun</div><div class="cal-wd">Mar</div><div class="cal-wd">Mié</div>
+          <div class="cal-wd">Jue</div><div class="cal-wd">Vie</div>
+          <div class="cal-wd" style="color:#dc2626">Sáb</div><div class="cal-wd" style="color:#dc2626">Dom</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <!-- WEEK VIEW -->
+      <div id="week-view" style="display:none">
+        <div class="cal-weekdays" style="grid-template-columns:52px repeat(7,1fr)">
+          <div class="cal-wd"></div>
+          <div class="cal-wd">Lun 23</div><div class="cal-wd">Mar 24</div><div class="cal-wd">Mié 25</div>
+          <div class="cal-wd">Jue 26</div><div class="cal-wd" style="color:var(--v5)">Vie 27</div>
+          <div class="cal-wd" style="color:#dc2626">Sáb 28</div><div class="cal-wd" style="color:#dc2626">Dom 1</div>
+        </div>
+        <div id="week-grid-body" style="max-height:480px;overflow-y:auto">
+          <div class="week-grid" id="week-grid"></div>
+        </div>
+      </div>
+      <!-- DAY VIEW -->
+      <div id="day-view" style="display:none;padding:20px">
+        <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9);margin-bottom:16px">Viernes 27 de febrero · Hoy</div>
+        <div id="day-events"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+      <!-- DAY DETAIL -->
+      <div class="day-detail">
+        <div class="day-detail-title" id="detail-date">Viernes 28 · Hoy</div>
+        <div id="event-list">
+          <div class="event-list-item">
+            <div class="event-time-dot"><div class="event-time-text">08:00</div><div class="event-dot-line"></div></div>
+            <div class="ev-dot" style="background:var(--v5);margin-top:3px;flex-shrink:0"></div>
+            <div class="ev-info"><div class="ev-name">Genética Molecular</div><div class="ev-detail">Clase teórica · Aula 3B · 2hs</div><div class="ev-tag" style="background:var(--v1);color:var(--v6)">Clase</div></div>
+          </div>
+          <div class="event-list-item">
+            <div class="event-time-dot"><div class="event-time-text">14:00</div><div class="event-dot-line"></div></div>
+            <div class="ev-dot" style="background:#4f46e5;margin-top:3px;flex-shrink:0"></div>
+            <div class="ev-info"><div class="ev-name">Bioquímica — Laboratorio</div><div class="ev-detail">Lab. 2 · 3hs</div><div class="ev-tag" style="background:#eff6ff;color:#4f46e5">Clase</div></div>
+          </div>
+          <div class="event-list-item">
+            <div class="event-time-dot"><div class="event-time-text">Todo el día</div></div>
+            <div class="ev-dot" style="background:#854d0e;margin-top:3px;flex-shrink:0"></div>
+            <div class="ev-info"><div class="ev-name">🏃 Sprint — Estadística · Día 2</div><div class="ev-detail">Estudiar Unidad 3 + Parcial modelo</div><div class="ev-tag" style="background:#fef9c3;color:#854d0e">Sprint</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TODO -->
+      <div class="todo-box">
+        <div class="todo-header">
+          <div class="todo-title">To-do list</div>
+          <div class="todo-date">Hoy · 28 feb</div>
+        </div>
+        <div id="todo-list">
+          <div class="todo-item done" onclick="this.classList.toggle('done')">
+            <div class="todo-check"></div>
+            <div class="todo-text">Leer capítulo 4 de Bioquímica</div>
+            <span class="todo-cat" style="background:#f0fdf4;color:#16a34a">✓</span>
+          </div>
+          <div class="todo-item" onclick="this.classList.toggle('done')">
+            <div class="todo-check"></div>
+            <div class="todo-text">Guía de ejercicios — Genética Molecular</div>
+            <span class="todo-cat" style="background:var(--v1);color:var(--v6)">Cursada</span>
+          </div>
+          <div class="todo-item" onclick="this.classList.toggle('done')">
+            <div class="todo-check"></div>
+            <div class="todo-text">Repasar Unidad 3 — Estadística (Sprint)</div>
+            <span class="todo-cat" style="background:#fef9c3;color:#854d0e">🏃</span>
+          </div>
+          <div class="todo-item" onclick="this.classList.toggle('done')">
+            <div class="todo-check"></div>
+            <div class="todo-text">Hacer parcial modelo — Estadística</div>
+            <span class="todo-cat" style="background:#fef9c3;color:#854d0e">🏃</span>
+          </div>
+          <div class="todo-item" onclick="this.classList.toggle('done')">
+            <div class="todo-check"></div>
+            <div class="todo-text">Entregar informe de laboratorio</div>
+            <span class="todo-cat" style="background:#fef2f2;color:#dc2626">Urgente</span>
+          </div>
+        </div>
+        <button class="add-todo-btn" onclick="addTodo()">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>
+          Agregar tarea...
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL CREAR EVENTO -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Crear evento</div>
+    <div class="form-group">
+      <div class="form-label">Nombre del evento</div>
+      <input class="form-input" type="text" placeholder="Ej: Parcial de Estadística"/>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Tipo</div>
+      <div class="type-options">
+        <div class="type-opt selected" style="color:var(--v6)" onclick="selectType(this)"><div class="type-dot" style="background:var(--v5)"></div>Clase</div>
+        <div class="type-opt" style="color:var(--red)" onclick="selectType(this)"><div class="type-dot" style="background:var(--red)"></div>Parcial</div>
+        <div class="type-opt" style="color:var(--green)" onclick="selectType(this)"><div class="type-dot" style="background:var(--green)"></div>Tarea</div>
+        <div class="type-opt" style="color:var(--orange)" onclick="selectType(this)"><div class="type-dot" style="background:var(--orange)"></div>Personal</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Fecha</div><input class="form-input" type="date" value="2026-02-28"/></div>
+      <div class="form-group"><div class="form-label">Hora inicio</div><input class="form-input" type="time" value="09:00"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Duración</div><select class="form-select"><option>1 hora</option><option>1.5 horas</option><option>2 horas</option><option>3 horas</option><option>Todo el día</option></select></div>
+      <div class="form-group"><div class="form-label">Locación (opcional)</div><input class="form-input" type="text" placeholder="Aula, Lab, Virtual..."/></div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Descripción (opcional)</div>
+      <input class="form-input" type="text" placeholder="Notas adicionales..."/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="closeModal()">Crear evento</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CALENDAR DATA ──
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let curYear = 2026, curMonth = 1; // 0-based, 1 = Feb
+
+const EVENTS = {
+  '2026-02-28': [
+    {title:'Genética Molecular',type:'clase'},{title:'Bioquímica — Lab',type:'clase'},{title:'Sprint · Estadística',type:'sprint'}
+  ],
+  '2026-03-03': [{title:'⚠️ Parcial Estadística',type:'parcial'}],
+  '2026-03-04': [{title:'Microbiología',type:'clase'}],
+  '2026-03-09': [{title:'Entregar informe',type:'tarea'}],
+  '2026-03-11': [{title:'Parcial Bioquímica',type:'parcial'}],
+  '2026-02-25': [{title:'Genética Molecular',type:'clase'},{title:'Fisiología',type:'clase'}],
+  '2026-02-26': [{title:'Bioquímica',type:'clase'}],
+  '2026-02-23': [{title:'Estadística',type:'clase'}],
+  '2026-02-24': [{title:'Microbiología',type:'clase'}],
+  '2026-02-18': [{title:'Genética Molecular',type:'clase'}],
+  '2026-02-17': [{title:'Bioquímica',type:'clase'}],
+  '2026-02-10': [{title:'Estadística',type:'clase'},{title:'Física',type:'clase'}],
+  '2026-02-04': [{title:'Inicio Sprint',type:'sprint'}],
+};
+
+function renderMonth() {
+  document.getElementById('month-label').textContent = MONTHS[curMonth] + ' ' + curYear;
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const today = new Date();
+  const firstDay = new Date(curYear, curMonth, 1);
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1; // Mon-based
+  const daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+  const daysInPrev = new Date(curYear, curMonth, 0).getDate();
+
+  let cells = [];
+  for (let i=startDow-1; i>=0; i--) cells.push({day: daysInPrev-i, cur:false});
+  for (let d=1; d<=daysInMonth; d++) cells.push({day:d, cur:true});
+  while (cells.length % 7 !== 0) cells.push({day: cells.length - daysInMonth - startDow + 1, cur:false});
+
+  cells.forEach(({day, cur}) => {
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (!cur ? ' other-month' : '');
+    const isToday = cur && day===28 && curMonth===1 && curYear===2026;
+    if (isToday) el.classList.add('today');
+    const dateKey = `${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = day;
+    el.appendChild(numEl);
+    const evs = EVENTS[dateKey] || [];
+    evs.slice(0,2).forEach(ev => {
+      const evEl = document.createElement('div');
+      evEl.className = `cal-event ${ev.type}`;
+      evEl.textContent = ev.title;
+      el.appendChild(evEl);
+    });
+    if (evs.length > 2) {
+      const more = document.createElement('div');
+      more.className = 'cal-more';
+      more.textContent = `+${evs.length-2} más`;
+      el.appendChild(more);
+    }
+    el.addEventListener('click', () => selectDay(day, cur, dateKey));
+    grid.appendChild(el);
+  });
+}
+
+function selectDay(day, cur, key) {
+  document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+function changeMonth(dir) {
+  curMonth += dir;
+  if (curMonth > 11) { curMonth=0; curYear++; }
+  if (curMonth < 0) { curMonth=11; curYear--; }
+  renderMonth();
+}
+
+function setView(v) {
+  ['mes','semana','dia'].forEach(x => {
+    document.getElementById('vt-'+x).classList.remove('active');
+    const el = document.getElementById(x==='mes'?'month-view':x==='semana'?'week-view':'day-view');
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('vt-'+v).classList.add('active');
+  const target = v==='mes'?'month-view':v==='semana'?'week-view':'day-view';
+  document.getElementById(target).style.display = 'block';
+  if (v==='semana') renderWeek();
+}
+
+function renderWeek() {
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+  const hours = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+  const weekEvents = {
+    4: [{h:'08:00',title:'Genética Molecular',type:'clase'},{h:'14:00',title:'Bioquímica',type:'clase'}],
+    2: [{h:'10:00',title:'Estadística',type:'clase'}],
+    3: [{h:'09:00',title:'Microbiología',type:'clase'}],
+  };
+  // Header row already in HTML
+  hours.forEach((h,hi) => {
+    const hourEl = document.createElement('div');
+    hourEl.className = 'week-hour';
+    hourEl.textContent = h;
+    grid.appendChild(hourEl);
+    for (let d=0;d<7;d++) {
+      const cell = document.createElement('div');
+      cell.className = 'week-cell';
+      const dayEvs = (weekEvents[d]||[]).filter(e=>e.h===h);
+      dayEvs.forEach(ev => {
+        const el = document.createElement('div');
+        el.className = `week-event ${ev.type}`;
+        el.textContent = ev.title;
+        cell.appendChild(el);
+      });
+      grid.appendChild(cell);
+    }
+  });
+}
+
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+function selectType(el) {
+  document.querySelectorAll('.type-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function addTodo() {
+  const text = prompt('Nueva tarea:');
+  if (!text) return;
+  const list = document.getElementById('todo-list');
+  const item = document.createElement('div');
+  item.className = 'todo-item';
+  item.onclick = () => item.classList.toggle('done');
+  item.innerHTML = `<div class="todo-check"></div><div class="todo-text">${text}</div><span class="todo-cat" style="background:var(--v1);color:var(--v6)">Nueva</span>`;
+  list.appendChild(item);
+}
+
+renderMonth();
+</script>
+</body>
+</html>

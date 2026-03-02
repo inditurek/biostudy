@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyLab — Historial Académico</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--v9:#1e0a3c;--v8:#2d1354;--v7:#3d1a6e;--v6:#5b2d9e;--v5:#7c3aed;--v4:#a855f7;--v3:#c084fc;--v2:#e9d5ff;--v1:#f5f0ff;--v0:#faf7ff;--g6:#6b7280;--g4:#9ca3af;--g2:#e5e7eb;--g1:#f3f4f6;--green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;--yellow:#d97706;--yellow-bg:#fffbeb;--red:#dc2626;--red-bg:#fef2f2;--blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe}
+body{font-family:'DM Sans',sans-serif;background:var(--v0);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 110%,rgba(168,85,247,.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--v9);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;z-index:100;box-shadow:4px 0 24px rgba(30,10,60,.15)}
+.sidebar-logo{width:40px;height:40px;background:var(--v5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;box-shadow:0 4px 16px rgba(124,58,237,.4);cursor:pointer}
+.nav-item{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;color:rgba(255,255,255,.4);border:none;background:transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-item.active{background:var(--v6);color:#fff;box-shadow:0 4px 12px rgba(91,45,158,.5)}
+.nav-item svg{width:22px;height:22px}
+.nav-tooltip{position:absolute;left:calc(100% + 12px);background:var(--v8);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-item:hover .nav-tooltip{opacity:1}
+.main{margin-left:72px;min-height:100vh;padding:36px 40px;position:relative;z-index:1}
+.view{display:none}
+.view.active{display:block;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.page-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:28px}
+.page-title{font-family:'Fraunces',serif;font-size:32px;font-weight:600;color:var(--v9);line-height:1.1}
+.page-sub{font-size:14px;color:var(--g6);margin-top:4px}
+.btn-correlativas{display:flex;align-items:center;gap:8px;background:#fff;color:var(--v6);border:1.5px solid var(--v3);border-radius:12px;padding:11px 20px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(124,58,237,.1)}
+.btn-correlativas:hover{background:var(--v1);border-color:var(--v5);box-shadow:0 4px 16px rgba(124,58,237,.2);transform:translateY(-1px)}
+.btn-correlativas svg{width:18px;height:18px}
+.stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:32px}
+.stat-card{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-label{font-size:11px;font-weight:600;color:var(--g4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.stat-value{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--v9);line-height:1}
+.stat-sub{font-size:11px;color:var(--g4);margin-top:4px}
+.stat-card.highlight{background:linear-gradient(135deg,var(--v6),var(--v5));border-color:transparent}
+.stat-card.highlight .stat-label,.stat-card.highlight .stat-sub{color:rgba(255,255,255,.7)}
+.stat-card.highlight .stat-value{color:#fff}
+.years-list{display:flex;flex-direction:column;gap:16px}
+.year-card{background:#fff;border-radius:18px;border:1.5px solid var(--g2);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.year-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;cursor:pointer;user-select:none}
+.year-header-left{display:flex;align-items:center;gap:14px}
+.year-badge{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--v6),var(--v5));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:#fff;box-shadow:0 4px 10px rgba(124,58,237,.3)}
+.year-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9)}
+.year-meta{font-size:12px;color:var(--g6);margin-top:2px}
+.year-stats{display:flex;gap:20px}
+.year-stat-num{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--v9)}
+.year-stat-label{font-size:10px;color:var(--g4);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.year-chevron{color:var(--g4);transition:transform .3s}
+.year-chevron.open{transform:rotate(180deg)}
+.year-chevron svg{width:20px;height:20px}
+.year-body{display:none;border-top:1px solid var(--g2)}
+.year-body.open{display:block}
+.cuatri-section{padding:0 24px 8px}
+.cuatri-header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px;border-bottom:1px solid var(--g2)}
+.cuatri-title{font-size:13px;font-weight:700;color:var(--v6);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.cuatri-avg{font-size:12px;font-weight:600;color:var(--g6)}
+.materias-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.materias-table th{font-size:11px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--g2)}
+.materias-table td{padding:11px 12px;font-size:13px;color:var(--v9);border-bottom:1px solid var(--g1);vertical-align:middle}
+.materias-table tr:last-child td{border-bottom:none}
+.materias-table tr:hover td{background:var(--v1)}
+.materia-name{font-weight:600;font-size:13px;color:var(--v9)}
+.nota-cell{font-weight:700;font-size:13px;text-align:center}
+.nota-cell.good{color:var(--green)}.nota-cell.mid{color:var(--yellow)}.nota-cell.bad{color:var(--red)}.nota-cell.empty{color:var(--g4);font-weight:400;font-style:italic}
+.status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+.status-badge.aprobada{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.status-badge.en-curso{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.status-badge.recursada{background:var(--red-bg);color:var(--red);border:1px solid #fecaca}
+.status-badge.promocionada{background:#fdf4ff;color:#7e22ce;border:1px solid var(--v2)}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--v6);cursor:pointer;margin-bottom:24px;padding:6px 12px;border-radius:8px;background:#fff;border:1px solid var(--g2);transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.back-btn:hover{background:var(--v1);border-color:var(--v3)}
+.back-btn svg{width:16px;height:16px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,10,60,.4);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:20px;padding:32px;width:440px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:fadeUp .25s ease}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--v9);margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--g6);margin-bottom:24px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:600;color:var(--g6);letter-spacing:.04em;text-transform:uppercase}
+.form-input,.form-select{border:1.5px solid var(--g2);border-radius:10px;padding:10px 13px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--v9);outline:none;transition:border-color .2s;background:#fff;width:100%}
+.form-input:focus,.form-select:focus{border-color:var(--v4)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{padding:10px 18px;border-radius:10px;border:1.5px solid var(--g2);background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;color:var(--g6)}
+.btn-save{padding:10px 22px;border-radius:10px;border:none;background:var(--v5);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,.3)}
+.btn-add-materia{display:flex;align-items:center;gap:6px;background:transparent;border:1.5px dashed var(--v3);color:var(--v5);border-radius:10px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;margin:0 0 16px}
+.btn-add-materia:hover{background:var(--v1);border-color:var(--v5)}
+.btn-add-materia svg{width:14px;height:14px}
+.edit-icon{opacity:0;color:var(--g4);cursor:pointer;transition:opacity .2s;padding:4px;border-radius:6px}
+.edit-icon:hover{color:var(--v5);background:var(--v1)}
+tr:hover .edit-icon{opacity:1}
+
+/* ══ CORRELATIVAS TREE ══ */
+.tree-container{background:#fff;border-radius:20px;border:1.5px solid var(--g2);padding:32px;box-shadow:0 2px 8px rgba(0,0,0,.04);overflow-x:auto}
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:28px;padding:16px 20px;background:var(--g1);border-radius:12px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--v9)}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* Columnas del árbol */
+.tree-columns{display:flex;gap:0;align-items:flex-start;min-width:900px}
+.tree-col{display:flex;flex-direction:column;gap:10px;flex:1;position:relative;padding:0 10px}
+.tree-col-label{font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:14px;padding:6px 10px;background:var(--g1);border-radius:8px}
+
+/* Nodo de materia */
+.tree-node{border-radius:12px;padding:12px 14px;border:2px solid;cursor:pointer;transition:all .2s;position:relative}
+.tree-node:hover{transform:scale(1.03);box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.tree-node.aprobada{background:var(--green-bg);border-color:var(--green)}
+.tree-node.promocionada{background:#fdf4ff;border-color:#7e22ce}
+.tree-node.en-curso{background:var(--yellow-bg);border-color:var(--yellow)}
+.tree-node.disponible{background:var(--blue-bg);border-color:var(--blue)}
+.tree-node.bloqueada{background:var(--g1);border-color:var(--g2);opacity:.65}
+.tree-node-name{font-size:12px;font-weight:700;color:var(--v9);line-height:1.3;margin-bottom:4px}
+.tree-node-nota{font-size:11px;font-weight:500}
+.tree-node.aprobada .tree-node-nota{color:var(--green)}
+.tree-node.promocionada .tree-node-nota{color:#7e22ce}
+.tree-node.en-curso .tree-node-nota{color:var(--yellow)}
+.tree-node.disponible .tree-node-nota{color:var(--blue)}
+.tree-node.bloqueada .tree-node-nota{color:var(--g4)}
+.tree-node-badge{display:inline-block;font-size:9px;font-weight:700;margin-top:5px;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.aprobada .tree-node-badge{background:#dcfce7;color:var(--green)}
+.promocionada .tree-node-badge{background:#f3e8ff;color:#7e22ce}
+.en-curso .tree-node-badge{background:#fef3c7;color:var(--yellow)}
+.disponible .tree-node-badge{background:#dbeafe;color:var(--blue)}
+.bloqueada .tree-node-badge{background:var(--g2);color:var(--g4)}
+
+/* Conectores SVG entre columnas */
+.tree-connectors{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+
+/* Panel de detalle al hacer clic */
+.detail-panel{margin-top:24px;background:var(--v1);border-radius:14px;border:1.5px solid var(--v2);padding:20px 24px;display:none;animation:fadeUp .25s ease}
+.detail-panel.visible{display:block}
+.detail-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--v9);margin-bottom:4px}
+.detail-row{display:flex;gap:32px;flex-wrap:wrap;margin-top:12px}
+.detail-item{display:flex;flex-direction:column;gap:2px}
+.detail-item-label{font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.06em}
+.detail-item-value{font-size:13px;font-weight:600;color:var(--v9)}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">SL</div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg><span class="nav-tooltip">Inicio</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg><span class="nav-tooltip">Calendario</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span class="nav-tooltip">Cuadernos</span></button>
+  <button class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="nav-tooltip">Historial Académico</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg><span class="nav-tooltip">Guía de Estudio</span></button>
+  <div style="flex:1"></div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-tooltip">Configuración</span></button>
+</nav>
+
+<main class="main">
+
+  <!-- VIEW: HISTORIAL -->
+  <div id="view-historial" class="view active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Historial Académico 🎓</div>
+        <div class="page-sub">Biotecnología · UADE · Ingreso 2023</div>
+      </div>
+      <button class="btn-correlativas" onclick="showView('correlativas')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+        Mapa de correlativas
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card highlight"><div class="stat-label">Promedio general</div><div class="stat-value">7.8</div><div class="stat-sub">Sobre materias aprobadas</div></div>
+      <div class="stat-card"><div class="stat-label">Aprobadas</div><div class="stat-value" style="color:var(--green)">18</div><div class="stat-sub">de 42 totales</div></div>
+      <div class="stat-card"><div class="stat-label">En curso</div><div class="stat-value" style="color:var(--blue)">6</div><div class="stat-sub">Este cuatrimestre</div></div>
+      <div class="stat-card"><div class="stat-label">Promocionadas</div><div class="stat-value" style="color:#7e22ce">5</div><div class="stat-sub">Sin final</div></div>
+      <div class="stat-card"><div class="stat-label">Recuperatorios</div><div class="stat-value" style="color:var(--yellow)">3</div><div class="stat-sub">Realizados</div></div>
+    </div>
+
+    <div class="years-list">
+      <!-- AÑO 1 -->
+      <div class="year-card">
+        <div class="year-header" onclick="toggleYear(this)">
+          <div class="year-header-left">
+            <div class="year-badge">1°</div>
+            <div><div class="year-title">Primer Año · 2023</div><div class="year-meta">8 materias aprobadas · Promedio 7.6</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:24px">
+            <div class="year-stats">
+              <div class="year-stat"><div class="year-stat-num" style="color:var(--green)">8</div><div class="year-stat-label">Aprobadas</div></div>
+              <div class="year-stat"><div class="year-stat-num" style="color:#7e22ce">2</div><div class="year-stat-label">Promovidas</div></div>
+              <div class="year-stat"><div class="year-stat-num">7.6</div><div class="year-stat-label">Promedio</div></div>
+            </div>
+            <div class="year-chevron open"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M19 9l-7 7-7-7"/></svg></div>
+          </div>
+        </div>
+        <div class="year-body open">
+          <div class="cuatri-section">
+            <div class="cuatri-header"><div class="cuatri-title">📘 Cuatrimestre 1</div><div class="cuatri-avg">Promedio: 7.5</div></div>
+            <table class="materias-table">
+              <thead><tr><th style="width:28%">Materia</th><th style="width:10%;text-align:center">Parcial 1</th><th style="width:10%;text-align:center">Parcial 2</th><th style="width:10%;text-align:center">Recup.</th><th style="width:12%;text-align:center">Cursada</th><th style="width:12%;text-align:center">Final</th><th style="width:13%;text-align:center">Estado</th><th style="width:5%"></th></tr></thead>
+              <tbody>
+                <tr><td><div class="materia-name">Matemática I</div></td><td class="nota-cell good">8</td><td class="nota-cell good">7</td><td class="nota-cell empty">—</td><td class="nota-cell good">8</td><td class="nota-cell good">7</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Matemática I')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Química General</div></td><td class="nota-cell mid">6</td><td class="nota-cell good">8</td><td class="nota-cell empty">—</td><td class="nota-cell good">7</td><td class="nota-cell good">8</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Química General')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Biología Celular</div></td><td class="nota-cell good">9</td><td class="nota-cell good">9</td><td class="nota-cell empty">—</td><td class="nota-cell good">9</td><td class="nota-cell empty">—</td><td><span class="status-badge promocionada">⭐ Promocionada</span></td><td><span class="edit-icon" onclick="openEditModal('Biología Celular')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Inglés I</div></td><td class="nota-cell good">7</td><td class="nota-cell good">8</td><td class="nota-cell empty">—</td><td class="nota-cell good">8</td><td class="nota-cell good">7</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Inglés I')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+              </tbody>
+            </table>
+            <button class="btn-add-materia" onclick="openEditModal(null)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar materia</button>
+            <div class="cuatri-header"><div class="cuatri-title">📗 Cuatrimestre 2</div><div class="cuatri-avg">Promedio: 7.7</div></div>
+            <table class="materias-table">
+              <thead><tr><th style="width:28%">Materia</th><th style="width:10%;text-align:center">Parcial 1</th><th style="width:10%;text-align:center">Parcial 2</th><th style="width:10%;text-align:center">Recup.</th><th style="width:12%;text-align:center">Cursada</th><th style="width:12%;text-align:center">Final</th><th style="width:13%;text-align:center">Estado</th><th style="width:5%"></th></tr></thead>
+              <tbody>
+                <tr><td><div class="materia-name">Matemática II</div></td><td class="nota-cell mid">5</td><td class="nota-cell good">7</td><td class="nota-cell mid">6</td><td class="nota-cell mid">6</td><td class="nota-cell good">7</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Matemática II')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Física I</div></td><td class="nota-cell good">8</td><td class="nota-cell good">9</td><td class="nota-cell empty">—</td><td class="nota-cell good">9</td><td class="nota-cell empty">—</td><td><span class="status-badge promocionada">⭐ Promocionada</span></td><td><span class="edit-icon" onclick="openEditModal('Física I')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Química Orgánica I</div></td><td class="nota-cell bad">4</td><td class="nota-cell good">7</td><td class="nota-cell mid">6</td><td class="nota-cell mid">6</td><td class="nota-cell mid">6</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Química Orgánica I')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Estadística I</div></td><td class="nota-cell good">8</td><td class="nota-cell good">8</td><td class="nota-cell empty">—</td><td class="nota-cell good">8</td><td class="nota-cell good">9</td><td><span class="status-badge aprobada">✓ Aprobada</span></td><td><span class="edit-icon" onclick="openEditModal('Estadística I')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+              </tbody>
+            </table>
+            <button class="btn-add-materia" onclick="openEditModal(null)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar materia</button>
+          </div>
+        </div>
+      </div>
+      <!-- AÑO 3 EN CURSO -->
+      <div class="year-card" style="border-color:var(--v3)">
+        <div class="year-header" onclick="toggleYear(this)">
+          <div class="year-header-left">
+            <div class="year-badge" style="background:linear-gradient(135deg,#d97706,#f59e0b)">3°</div>
+            <div><div class="year-title">Tercer Año · 2025–2026</div><div class="year-meta" style="color:var(--blue);font-weight:600">🔵 En curso · 6 materias activas</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:24px">
+            <div class="year-stats">
+              <div class="year-stat"><div class="year-stat-num" style="color:var(--blue)">6</div><div class="year-stat-label">En curso</div></div>
+              <div class="year-stat"><div class="year-stat-num">—</div><div class="year-stat-label">Promedio</div></div>
+            </div>
+            <div class="year-chevron open"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M19 9l-7 7-7-7"/></svg></div>
+          </div>
+        </div>
+        <div class="year-body open">
+          <div class="cuatri-section">
+            <div class="cuatri-header"><div class="cuatri-title">📙 Cuatrimestre 1 · 2026</div><div class="cuatri-avg" style="color:var(--blue)">En curso</div></div>
+            <table class="materias-table">
+              <thead><tr><th style="width:28%">Materia</th><th style="width:10%;text-align:center">Parcial 1</th><th style="width:10%;text-align:center">Parcial 2</th><th style="width:10%;text-align:center">Recup.</th><th style="width:12%;text-align:center">Cursada</th><th style="width:12%;text-align:center">Final</th><th style="width:13%;text-align:center">Estado</th><th style="width:5%"></th></tr></thead>
+              <tbody>
+                <tr><td><div class="materia-name">Genética Molecular</div></td><td class="nota-cell good">8</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td><span class="status-badge en-curso">● En curso</span></td><td><span class="edit-icon" onclick="openEditModal('Genética Molecular')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+                <tr><td><div class="materia-name">Estadística</div></td><td class="nota-cell mid">6</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td class="nota-cell empty">—</td><td><span class="status-badge en-curso">● En curso</span></td><td><span class="edit-icon" onclick="openEditModal('Estadística')"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span></td></tr>
+              </tbody>
+            </table>
+            <button class="btn-add-materia" onclick="openEditModal(null)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar materia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: CORRELATIVAS -->
+  <div id="view-correlativas" class="view">
+    <div class="back-btn" onclick="showView('historial')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M15 19l-7-7 7-7"/></svg>Volver al Historial</div>
+    <div style="margin-bottom:24px">
+      <div class="page-title">Mapa de Correlativas 🗺️</div>
+      <div class="page-sub">Hacé clic en cualquier materia para ver sus detalles. Las flechas indican dependencias.</div>
+    </div>
+    <div class="tree-container">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Aprobada</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7e22ce"></div>Promocionada</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>En curso</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Disponible</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--g4)"></div>Bloqueada</div>
+      </div>
+
+      <!-- ÁRBOL POR COLUMNAS (año a año) -->
+      <div style="position:relative">
+        <svg id="tree-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="tree-columns" id="tree-cols">
+          <!-- generado por JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL DETALLE -->
+    <div class="detail-panel" id="detail-panel">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <div id="det-color" style="width:12px;height:12px;border-radius:3px;flex-shrink:0"></div>
+        <div class="detail-name" id="det-name"></div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-item"><div class="detail-item-label">Estado</div><div class="detail-item-value" id="det-estado"></div></div>
+        <div class="detail-item"><div class="detail-item-label">Año · Cuatrimestre</div><div class="detail-item-value" id="det-year"></div></div>
+        <div class="detail-item"><div class="detail-item-label">Notas</div><div class="detail-item-value" id="det-nota"></div></div>
+        <div class="detail-item"><div class="detail-item-label">Habilita</div><div class="detail-item-value" id="det-habilita"></div></div>
+        <div class="detail-item"><div class="detail-item-label">Requiere</div><div class="detail-item-value" id="det-requiere"></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Editar materia</div>
+    <div class="modal-sub">Cargá o actualizá las notas de esta materia.</div>
+    <div class="form-grid">
+      <div class="form-group full"><div class="form-label">Nombre</div><input class="form-input" type="text" id="f-nombre" placeholder="Ej: Bioquímica II"/></div>
+      <div class="form-group"><div class="form-label">Parcial 1</div><input class="form-input" type="number" id="f-p1" placeholder="1–10" min="1" max="10"/></div>
+      <div class="form-group"><div class="form-label">Parcial 2</div><input class="form-input" type="number" id="f-p2" placeholder="1–10" min="1" max="10"/></div>
+      <div class="form-group"><div class="form-label">Recuperatorio</div><input class="form-input" type="number" id="f-rec" placeholder="1–10" min="1" max="10"/></div>
+      <div class="form-group"><div class="form-label">Cursada</div><input class="form-input" type="number" id="f-cursada" placeholder="1–10" min="1" max="10"/></div>
+      <div class="form-group"><div class="form-label">Final</div><input class="form-input" type="number" id="f-final" placeholder="1–10" min="1" max="10"/></div>
+      <div class="form-group"><div class="form-label">Estado</div><select class="form-select" id="f-estado"><option value="en-curso">En curso</option><option value="aprobada">Aprobada</option><option value="promocionada">Promocionada</option><option value="recursada">Recursada</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="closeModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showView(v){document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));document.getElementById('view-'+v).classList.add('active');}
+function toggleYear(h){const b=h.nextElementSibling,c=h.querySelector('.year-chevron');b.classList.toggle('open');c.classList.toggle('open');}
+function openEditModal(name){document.getElementById('f-nombre').value=name||'';document.getElementById('modal-title').textContent=name?'Editar notas':'Nueva materia';document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── ÁRBOL DE CORRELATIVAS ──
+const columns = [
+  {
+    label: '1° Año · C1 — 2023',
+    nodes: [
+      {name:'Matemática I', status:'aprobada', nota:'Final: 7', habilita:['Matemática II','Física I'], requiere:[]},
+      {name:'Química General', status:'aprobada', nota:'Final: 8', habilita:['Química Orgánica I'], requiere:[]},
+      {name:'Biología Celular', status:'promocionada', nota:'Promovida: 9', habilita:['Genética I','Microbiología I'], requiere:[]},
+      {name:'Inglés I', status:'aprobada', nota:'Final: 7', habilita:[], requiere:[]},
+    ]
+  },
+  {
+    label: '1° Año · C2 — 2023',
+    nodes: [
+      {name:'Matemática II', status:'aprobada', nota:'Final: 7', habilita:['Estadística'], requiere:['Matemática I']},
+      {name:'Física I', status:'promocionada', nota:'Promovida: 9', habilita:[], requiere:['Matemática I']},
+      {name:'Química Orgánica I', status:'aprobada', nota:'Final: 6', habilita:['Bioquímica I','Química Org. II'], requiere:['Química General']},
+      {name:'Estadística I', status:'aprobada', nota:'Final: 9', habilita:[], requiere:[]},
+    ]
+  },
+  {
+    label: '2° Año · C1 — 2024',
+    nodes: [
+      {name:'Genética I', status:'aprobada', nota:'Final: 8', habilita:['Genética Molecular'], requiere:['Biología Celular']},
+      {name:'Bioquímica I', status:'promocionada', nota:'Promovida: 9', habilita:['Bioquímica II'], requiere:['Química Org. I']},
+      {name:'Microbiología I', status:'aprobada', nota:'Final: 9', habilita:['Microbiología II'], requiere:['Biología Celular']},
+      {name:'Fisiología I', status:'aprobada', nota:'Final: 7', habilita:['Fisiología II'], requiere:[]},
+    ]
+  },
+  {
+    label: '3° Año · C1 — 2026',
+    nodes: [
+      {name:'Genética Molecular', status:'en-curso', nota:'Parcial 1: 8', habilita:[], requiere:['Genética I']},
+      {name:'Bioquímica II', status:'en-curso', nota:'Parcial 1: 9', habilita:['Biología Molecular'], requiere:['Bioquímica I']},
+      {name:'Microbiología II', status:'en-curso', nota:'Sin parciales', habilita:[], requiere:['Microbiología I']},
+      {name:'Estadística', status:'en-curso', nota:'Parcial 1: 6', habilita:[], requiere:['Matemática II']},
+    ]
+  },
+  {
+    label: '3° Año · C2 — (próximo)',
+    nodes: [
+      {name:'Biología Molecular', status:'bloqueada', nota:'Requiere: Bioquímica II', habilita:[], requiere:['Bioquímica II']},
+      {name:'Química Org. II', status:'disponible', nota:'Disponible', habilita:[], requiere:['Química Org. I']},
+      {name:'Fisiología II', status:'disponible', nota:'Disponible', habilita:[], requiere:['Fisiología I']},
+    ]
+  }
+];
+
+const statusColor = {aprobada:'#16a34a', promocionada:'#7e22ce', 'en-curso':'#d97706', disponible:'#2563eb', bloqueada:'#9ca3af'};
+const statusLabel = {aprobada:'✓ Aprobada', promocionada:'⭐ Promocionada', 'en-curso':'● En curso', disponible:'Disponible', bloqueada:'🔒 Bloqueada'};
+
+const colsEl = document.getElementById('tree-cols');
+const nodeEls = {}; // name -> DOM element
+
+columns.forEach((col, ci) => {
+  const colDiv = document.createElement('div');
+  colDiv.className = 'tree-col';
+  colDiv.innerHTML = `<div class="tree-col-label">${col.label}</div>`;
+  col.nodes.forEach(node => {
+    const el = document.createElement('div');
+    el.className = `tree-node ${node.status}`;
+    el.innerHTML = `
+      <div class="tree-node-name">${node.name}</div>
+      <div class="tree-node-nota">${node.nota}</div>
+      <div class="tree-node-badge">${statusLabel[node.status]}</div>
+    `;
+    el.addEventListener('click', () => showDetail(node));
+    colDiv.appendChild(el);
+    nodeEls[node.name] = el;
+  });
+  colsEl.appendChild(colDiv);
+});
+
+// Draw SVG arrows after layout
+window.addEventListener('load', drawArrows);
+window.addEventListener('resize', drawArrows);
+
+function drawArrows() {
+  const svg = document.getElementById('tree-svg');
+  svg.innerHTML = '';
+  const containerRect = svg.parentElement.getBoundingClientRect();
+
+  columns.forEach(col => {
+    col.nodes.forEach(node => {
+      node.habilita.forEach(targetName => {
+        const fromEl = nodeEls[node.name];
+        const toEl = nodeEls[targetName];
+        if (!fromEl || !toEl) return;
+        const fromR = fromEl.getBoundingClientRect();
+        const toR = toEl.getBoundingClientRect();
+        const x1 = fromR.right - containerRect.left;
+        const y1 = fromR.top + fromR.height/2 - containerRect.top;
+        const x2 = toR.left - containerRect.left;
+        const y2 = toR.top + toR.height/2 - containerRect.top;
+        const mx = (x1+x2)/2;
+
+        // Arrow color based on source status
+        const color = statusColor[node.status] || '#9ca3af';
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+        path.setAttribute('fill','none');
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width','2');
+        path.setAttribute('stroke-opacity','0.5');
+        path.setAttribute('marker-end','url(#arrow)');
+        svg.appendChild(path);
+      });
+    });
+  });
+
+  // Arrowhead marker
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML = `<marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#9ca3af"/></marker>`;
+  svg.insertBefore(defs, svg.firstChild);
+}
+
+function showDetail(node) {
+  document.getElementById('det-name').textContent = node.name;
+  document.getElementById('det-color').style.background = statusColor[node.status];
+  document.getElementById('det-estado').textContent = statusLabel[node.status];
+  document.getElementById('det-year').textContent = columns.find(c=>c.nodes.includes(node))?.label || '—';
+  document.getElementById('det-nota').textContent = node.nota;
+  document.getElementById('det-habilita').textContent = node.habilita.length ? node.habilita.join(', ') : 'Ninguna';
+  document.getElementById('det-requiere').textContent = node.requiere.length ? node.requiere.join(', ') : 'Ninguna';
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('visible');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+</script>
+</body>
+</html>

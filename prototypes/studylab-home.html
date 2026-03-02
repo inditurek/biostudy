@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyLab — Inicio</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--v9:#1e0a3c;--v8:#2d1354;--v7:#3d1a6e;--v6:#5b2d9e;--v5:#7c3aed;--v4:#a855f7;--v3:#c084fc;--v2:#e9d5ff;--v1:#f5f0ff;--v0:#faf7ff;--g6:#6b7280;--g4:#9ca3af;--g2:#e5e7eb;--g1:#f3f4f6;--green:#16a34a;--green-bg:#f0fdf4;--yellow:#d97706;--blue:#2563eb;--blue-bg:#eff6ff}
+body{font-family:'DM Sans',sans-serif;background:var(--v0);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 110%,rgba(168,85,247,.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;background:var(--v9);display:flex;flex-direction:column;align-items:center;padding:24px 0;gap:8px;z-index:100;box-shadow:4px 0 24px rgba(30,10,60,.15)}
+.sidebar-logo{width:40px;height:40px;background:var(--v5);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:24px;box-shadow:0 4px 16px rgba(124,58,237,.4);cursor:pointer}
+.nav-item{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;color:rgba(255,255,255,.4);border:none;background:transparent}
+.nav-item:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8)}
+.nav-item.active{background:var(--v6);color:#fff;box-shadow:0 4px 12px rgba(91,45,158,.5)}
+.nav-item svg{width:22px;height:22px}
+.nav-tooltip{position:absolute;left:calc(100% + 12px);background:var(--v8);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-item:hover .nav-tooltip{opacity:1}
+.main{margin-left:72px;min-height:100vh;padding:36px 40px;position:relative;z-index:1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;animation:fadeUp .5s ease both .05s}
+.greeting-label{font-size:13px;font-weight:500;color:var(--v4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.greeting-name{font-family:'Fraunces',serif;font-size:36px;font-weight:600;color:var(--v9);line-height:1.1}
+.greeting-sub{font-size:14px;color:var(--g6);margin-top:6px}
+.header-right{display:flex;align-items:center;gap:12px;margin-top:8px}
+.date-chip{background:#fff;border:1px solid var(--g2);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--v7);display:flex;align-items:center;gap:8px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--v5),var(--v3));display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:#fff;box-shadow:0 4px 12px rgba(124,58,237,.3);cursor:pointer}
+
+/* NOTIFICACIONES */
+.notifications{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;animation:fadeUp .5s ease both .09s}
+.notif{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:14px;border:1.5px solid;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative}
+.notif:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.notif.urgent{background:#fff8f0;border-color:#fed7aa}
+.notif.info{background:var(--v1);border-color:var(--v2)}
+.notif.success{background:var(--green-bg);border-color:#bbf7d0}
+.notif-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.notif.urgent .notif-icon{background:#ffedd5}
+.notif.info .notif-icon{background:var(--v2)}
+.notif.success .notif-icon{background:#dcfce7}
+.notif-text{flex:1}
+.notif-title{font-size:13px;font-weight:600;color:var(--v9)}
+.notif-sub{font-size:12px;color:var(--g6);margin-top:2px}
+.notif-close{color:var(--g4);padding:4px;cursor:pointer;font-size:16px;line-height:1}
+.notif-close:hover{color:var(--v5)}
+
+/* SPRINT BANNER */
+.sprint-banner{background:linear-gradient(135deg,#7c2d12,#ea580c,#f97316);border-radius:18px;padding:22px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;animation:fadeUp .5s ease both .11s;box-shadow:0 8px 28px rgba(234,88,12,.35);cursor:pointer;transition:transform .2s}
+.sprint-banner:hover{transform:translateY(-2px)}
+.sprint-left{display:flex;align-items:center;gap:16px}
+.sprint-fire{font-size:32px}
+.sprint-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:#fff}
+.sprint-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:3px}
+.sprint-btn{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s;white-space:nowrap}
+.sprint-btn:hover{background:rgba(255,255,255,.3)}
+
+/* PROGRESS BANNER */
+.progress-banner{background:linear-gradient(135deg,var(--v7) 0%,var(--v5) 60%,var(--v4) 100%);border-radius:20px;padding:28px 32px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(91,45,158,.35);animation:fadeUp .5s ease both .14s}
+.progress-banner::before{content:'';position:absolute;right:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06)}
+.progress-banner::after{content:'';position:absolute;right:60px;bottom:-80px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.04)}
+.banner-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:6px}
+.banner-sub{font-size:14px;color:rgba(255,255,255,.7);max-width:340px;line-height:1.5}
+.banner-stats{display:flex;gap:28px;position:relative;z-index:1}
+.banner-stat{text-align:center}
+.banner-stat-num{font-family:'Fraunces',serif;font-size:32px;font-weight:700;color:#fff;line-height:1}
+.banner-stat-label{font-size:11px;font-weight:500;color:rgba(255,255,255,.65);letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.banner-divider{width:1px;height:40px;background:rgba(255,255,255,.2);align-self:center}
+
+/* DASHBOARD RENDIMIENTO */
+.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;animation:fadeUp .5s ease both .17s}
+.dash-card{background:#fff;border-radius:16px;border:1.5px solid var(--g2);padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s;cursor:default}
+.dash-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(91,45,158,.1)}
+.dash-label{font-size:11px;font-weight:600;color:var(--g4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.dash-value{font-family:'Fraunces',serif;font-size:30px;font-weight:700;color:var(--v9);line-height:1}
+.dash-sub{font-size:12px;color:var(--g4);margin-top:6px}
+.dash-bar{height:6px;background:var(--g2);border-radius:4px;margin-top:10px;overflow:hidden}
+.dash-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--v5),var(--v3))}
+/* racha fire */
+.dash-card.racha .dash-value{color:#ea580c}
+/* carrera */
+.dash-card.carrera .dash-value{color:var(--v5)}
+/* promedio */
+.dash-card.promedio .dash-value{color:var(--green)}
+/* cuatri */
+.dash-card.cuatri .dash-value{color:var(--blue)}
+
+
+
+/* BOTTOM ROW */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;animation:fadeUp .5s ease both .23s}
+.today-card,.upcoming-card{background:#fff;border-radius:18px;padding:24px;border:1.5px solid var(--g2);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.today-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.today-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--v9)}
+.view-all{font-size:12px;font-weight:500;color:var(--v5);cursor:pointer;padding:4px 10px;border-radius:8px;background:var(--v1);transition:background .2s}
+.view-all:hover{background:var(--v2)}
+.todo-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--g1);cursor:pointer}
+.todo-item:last-child{border-bottom:none}
+.todo-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--g2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.todo-item:hover .todo-check{border-color:var(--v4)}
+.todo-item.done .todo-check{background:var(--v5);border-color:var(--v5)}
+.todo-item.done .todo-check::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.todo-text{font-size:13px;font-weight:500;color:var(--v9);flex:1}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--g4)}
+.todo-tag{font-size:11px;font-weight:500;padding:3px 8px;border-radius:6px}
+.add-todo{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--g1);cursor:pointer;transition:background .2s;font-size:13px;color:var(--g4);font-weight:400;border:none;width:100%}
+.add-todo:hover{background:var(--v1);color:var(--v5)}
+.event-item{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--g1)}
+.event-item:last-child{border-bottom:none}
+.event-time-col{text-align:right;min-width:44px}
+.event-time{font-size:12px;font-weight:600;color:var(--v6)}
+.event-day{font-size:10px;color:var(--g4);margin-top:2px}
+.event-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.event-name{font-size:13px;font-weight:600;color:var(--v9)}
+.event-detail{font-size:11px;color:var(--g4);margin-top:2px}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+  <div class="sidebar-logo">SL</div>
+  <button class="nav-item active"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg><span class="nav-tooltip">Inicio</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg><span class="nav-tooltip">Calendario</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span class="nav-tooltip">Cuadernos</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="nav-tooltip">Historial Académico</span></button>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg><span class="nav-tooltip">Guía de Estudio</span></button>
+  <div style="flex:1"></div>
+  <button class="nav-item"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg><span class="nav-tooltip">Configuración</span></button>
+</nav>
+
+<main class="main">
+  <!-- HEADER -->
+  <header class="header">
+    <div>
+      <div class="greeting-label">Bienvenido de vuelta</div>
+      <div class="greeting-name">StudyLab 📚</div>
+      <div class="greeting-sub">Hoy es un buen día para avanzar.</div>
+    </div>
+    <div class="header-right">
+      <div class="date-chip"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" d="M16 2v4M8 2v4M3 10h18"/></svg>Viernes, 28 de febrero 2026</div>
+      <div class="avatar">TU</div>
+    </div>
+  </header>
+
+  <!-- NOTIFICACIONES INTELIGENTES -->
+  <div class="notifications" id="notifs">
+    <div class="notif urgent">
+      <div class="notif-icon">⚠️</div>
+      <div class="notif-text">
+        <div class="notif-title">Parcial de Estadística en 3 días — ¿Ya activaste el modo Sprint?</div>
+        <div class="notif-sub">Lunes 3 de marzo · Aula Magna · Te quedan 3 días de repaso.</div>
+      </div>
+      <div class="notif-close" onclick="this.parentElement.remove()">×</div>
+    </div>
+    <div class="notif info">
+      <div class="notif-icon">📖</div>
+      <div class="notif-text">
+        <div class="notif-title">Llevás 3 días sin estudiar Genética Molecular.</div>
+        <div class="notif-sub">El parcial se acerca. ¿Abrimos la guía de estudio?</div>
+      </div>
+      <div class="notif-close" onclick="this.parentElement.remove()">×</div>
+    </div>
+    <div class="notif success">
+      <div class="notif-icon">🔥</div>
+      <div class="notif-text">
+        <div class="notif-title">¡Racha de 12 días estudiando! Seguís en racha.</div>
+        <div class="notif-sub">Completá al menos una tarea hoy para mantenerla.</div>
+      </div>
+      <div class="notif-close" onclick="this.parentElement.remove()">×</div>
+    </div>
+  </div>
+
+  <!-- SPRINT ACTIVO -->
+  <div class="sprint-banner">
+    <div class="sprint-left">
+      <div class="sprint-fire">🏃</div>
+      <div>
+        <div class="sprint-title">Modo Sprint activo — Estadística</div>
+        <div class="sprint-sub">Día 2 de 5 · Hoy: repasar Unidad 3 y hacer cuestionario de práctica.</div>
+      </div>
+    </div>
+    <button class="sprint-btn">Ver plan del día →</button>
+  </div>
+
+  <!-- DASHBOARD DE RENDIMIENTO -->
+  <div class="dashboard-grid">
+    <div class="dash-card racha">
+      <div class="dash-label">🔥 Racha actual</div>
+      <div class="dash-value">12</div>
+      <div class="dash-sub">días seguidos estudiando</div>
+      <div class="dash-bar"><div class="dash-bar-fill" style="width:80%;background:linear-gradient(90deg,#ea580c,#f97316)"></div></div>
+    </div>
+    <div class="dash-card carrera">
+      <div class="dash-label">🎓 Carrera completada</div>
+      <div class="dash-value">43%</div>
+      <div class="dash-sub">18 de 42 materias aprobadas</div>
+      <div class="dash-bar"><div class="dash-bar-fill" style="width:43%"></div></div>
+    </div>
+    <div class="dash-card promedio">
+      <div class="dash-label">📊 Promedio general</div>
+      <div class="dash-value">7.8</div>
+      <div class="dash-sub">↑ +0.2 vs cuatrimestre anterior</div>
+      <div class="dash-bar"><div class="dash-bar-fill" style="width:78%;background:linear-gradient(90deg,#16a34a,#4ade80)"></div></div>
+    </div>
+    <div class="dash-card cuatri">
+      <div class="dash-label">✅ Este cuatrimestre</div>
+      <div class="dash-value">0/6</div>
+      <div class="dash-sub">materias aprobadas · en curso</div>
+      <div class="dash-bar"><div class="dash-bar-fill" style="width:5%;background:linear-gradient(90deg,#2563eb,#60a5fa)"></div></div>
+    </div>
+  </div>
+
+  <!-- PROGRESO CUATRIMESTRE -->
+  <div class="progress-banner">
+    <div>
+      <div class="banner-title">Cuatrimestre en curso 🎯</div>
+      <div class="banner-sub">Llevás 8 semanas de cursada. Seguís en camino para cerrar un cuatrimestre sólido.</div>
+    </div>
+    <div class="banner-stats">
+      <div class="banner-stat"><div class="banner-stat-num">6</div><div class="banner-stat-label">Materias cursando</div></div>
+      <div class="banner-divider"></div>
+      <div class="banner-stat"><div class="banner-stat-num">18</div><div class="banner-stat-label">Aprobadas</div></div>
+      <div class="banner-divider"></div>
+      <div class="banner-stat"><div class="banner-stat-num">7.8</div><div class="banner-stat-label">Promedio gral.</div></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="bottom-row">
+    <div class="today-card">
+      <div class="today-header"><div class="today-title">To-do de hoy</div><span class="view-all">Ver todo</span></div>
+      <div class="todo-item done"><div class="todo-check"></div><div class="todo-text">Leer capítulo 4 de Bioquímica</div><span class="todo-tag" style="background:#f0fdf4;color:#16a34a">✓ Hecho</span></div>
+      <div class="todo-item"><div class="todo-check"></div><div class="todo-text">Hacer guía de Genética Molecular</div><span class="todo-tag" style="background:var(--v1);color:var(--v5)">Pendiente</span></div>
+      <div class="todo-item"><div class="todo-check"></div><div class="todo-text">Repasar Unidad 3 — Estadística (Sprint)</div><span class="todo-tag" style="background:#fff7ed;color:#d97706">🏃 Sprint</span></div>
+      <div class="todo-item"><div class="todo-check"></div><div class="todo-text">Cuestionario de práctica — Estadística</div><span class="todo-tag" style="background:#fff7ed;color:#d97706">🏃 Sprint</span></div>
+      <button class="add-todo"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M12 4v16m8-8H4"/></svg>Agregar tarea...</button>
+    </div>
+    <div class="upcoming-card">
+      <div class="today-header"><div class="today-title">Próximos eventos</div><span class="view-all">Calendario</span></div>
+      <div class="event-item"><div class="event-time-col"><div class="event-time">08:00</div><div class="event-day">Hoy</div></div><div class="event-dot" style="background:var(--v5)"></div><div><div class="event-name">Genética Molecular</div><div class="event-detail">Clase teórica · Aula 3B</div></div></div>
+      <div class="event-item"><div class="event-time-col"><div class="event-time">14:00</div><div class="event-day">Hoy</div></div><div class="event-dot" style="background:#4f46e5"></div><div><div class="event-name">Bioquímica</div><div class="event-detail">Laboratorio · Lab. 2</div></div></div>
+      <div class="event-item"><div class="event-time-col"><div class="event-time">10:00</div><div class="event-day">Lun</div></div><div class="event-dot" style="background:#dc2626"></div><div><div class="event-name">⚠️ Parcial 1 — Estadística</div><div class="event-detail">En 3 días · Aula Magna</div></div></div>
+      <div class="event-item"><div class="event-time-col"><div class="event-time">15:00</div><div class="event-day">Mié</div></div><div class="event-dot" style="background:#d97706"></div><div><div class="event-name">Microbiología</div><div class="event-detail">Clase práctica · Aula 1A</div></div></div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.querySelectorAll('.todo-item').forEach(item=>{
+  item.addEventListener('click',()=>item.classList.toggle('done'));
+});
+</script>
+</body>
+</html>
