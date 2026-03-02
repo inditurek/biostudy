@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --v9: #1e0a3c;
+  --v8: #2d1354;
+  --v7: #3d1a6e;
+  --v6: #5b2d9e;
+  --v5: #7c3aed;
+  --v4: #a855f7;
+  --v3: #c084fc;
+  --v2: #e9d5ff;
+  --v1: #f5f0ff;
+  --v0: #faf7ff;
+}
+
+body {
+  background-color: var(--v0);
+  color: var(--v9);
+}

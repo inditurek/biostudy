@@ -1,0 +1,24 @@
+# Next.js
+.next/
+out/
+
+# Dependencias
+node_modules/
+
+# Variables de entorno (nunca commitear .env.local)
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Build y deploy
+.vercel
+
+# Claude Code (sistema interno, no commitear)
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
