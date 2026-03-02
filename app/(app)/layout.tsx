@@ -1,10 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import Sidebar from '@/components/layout/Sidebar'
 
-// Layout protegido: todas las rutas dentro de (app) requieren autenticación.
-// Si el usuario no está logueado, el middleware lo redirige a /login antes
-// de que este layout llegue a ejecutarse — pero lo verificamos acá también
-// como segunda capa de seguridad.
 export default async function AppLayout({
   children,
 }: {
@@ -15,16 +12,28 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Segunda verificación: si por alguna razón el middleware no redirigió
+  // Segunda verificación de auth (el middleware ya lo hace, esto es redundancia)
   if (!user) {
     redirect('/login')
   }
 
+  // Si el usuario no tiene perfil creado, es su primera vez → onboarding
+  const { data: perfil } = await supabase
+    .from('perfiles')
+    .select('id')
+    .eq('id', user.id)
+    .single()
+
+  if (!perfil) {
+    redirect('/onboarding')
+  }
+
   return (
-    // En fases siguientes este layout tendrá el sidebar y la navegación.
-    // Por ahora es un contenedor simple.
-    <div className="min-h-screen bg-brand-50">
-      {children}
+    <div className="flex min-h-screen bg-brand-50">
+      <Sidebar />
+      <main className="ml-[72px] flex-1">
+        {children}
+      </main>
     </div>
   )
 }
