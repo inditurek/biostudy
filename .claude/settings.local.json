@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout main)",
+      "Bash(git pull origin main)",
+      "Bash(git checkout -b feat/setup-inicial)",
+      "Bash(npm install)",
+      "Bash(\"/c/Program Files/nodejs/npm\" install)",
+      "Bash(PATH=\"/c/Program Files/nodejs:$PATH\" cd \"C:/Users/indit/OneDrive/Desktop/biostudy\")",
+      "Bash(PATH=\"/c/Program Files/nodejs:$PATH\" \"/c/Program Files/nodejs/npm\" install)",
+      "Bash(git add .env.local.example .gitignore .prettierrc next.config.ts package.json package-lock.json postcss.config.js tailwind.config.ts tsconfig.json)",
+      "Bash(git add .vscode/ app/ components/ lib/ supabase/)",
+      "Bash(git commit:*)",
+      "Bash(git push -u origin feat/setup-inicial)",
+      "Bash(git push)"
+    ]
+  }
+}
