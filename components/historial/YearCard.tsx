@@ -25,11 +25,12 @@ function fmt(n: number | null): string {
 type EstadoBadgeProps = { estado: EstadoMateria }
 function EstadoBadge({ estado }: EstadoBadgeProps) {
   const map: Record<EstadoMateria, { label: string; cls: string }> = {
-    aprobada:        { label: '✓ Aprobada',        cls: 'bg-green-50 text-green-700 border border-green-200' },
+    pendiente:       { label: '○ Pendiente',        cls: 'bg-brand-50 text-brand-400 border border-brand-200' },
+    aprobada:        { label: '✓ Aprobada',         cls: 'bg-green-50 text-green-700 border border-green-200' },
     promocionada:    { label: '⭐ Promocionada',    cls: 'bg-purple-50 text-purple-700 border border-purple-200' },
-    cursando:        { label: '● En curso',         cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
-    final_pendiente: { label: '⏳ Final pendiente', cls: 'bg-amber-50 text-amber-700 border border-amber-200' },
-    libre:           { label: '✗ Libre',            cls: 'bg-red-50 text-red-700 border border-red-200' },
+    cursando:        { label: '● En curso',          cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
+    final_pendiente: { label: '⏳ Final pendiente',  cls: 'bg-amber-50 text-amber-700 border border-amber-200' },
+    libre:           { label: '✗ Libre',             cls: 'bg-red-50 text-red-700 border border-red-200' },
   }
   const { label, cls } = map[estado]
   return (

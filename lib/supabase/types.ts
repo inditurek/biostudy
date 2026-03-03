@@ -13,6 +13,7 @@ export type Json =
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export type EstadoMateria =
+  | 'pendiente'
   | 'cursando'
   | 'aprobada'
   | 'promocionada'

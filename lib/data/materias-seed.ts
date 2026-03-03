@@ -93,89 +93,89 @@ export const MATERIAS_SEED: MateriaSeed[] = [
 
   // ─── TERCER AÑO — 1° Cuatrimestre ──────────────────────────────────────────
   {
-    materia: { nombre: 'Técnicas Biotecnológicas', anio: 3, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Técnicas Biotecnológicas', anio: 3, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Fenómenos de Transporte', anio: 3, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Fenómenos de Transporte', anio: 3, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Bioestadística', anio: 3, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Bioestadística', anio: 3, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Agrobiotecnología', anio: 3, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Agrobiotecnología', anio: 3, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Química Biológica II', anio: 3, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Química Biológica II', anio: 3, cuatrimestre: 1, estado: 'pendiente' },
   },
 
   // ─── TERCER AÑO — 2° Cuatrimestre ──────────────────────────────────────────
   {
-    materia: { nombre: 'Ingeniería Genética I', anio: 3, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Ingeniería Genética I', anio: 3, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Fisicoquímica', anio: 3, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Fisicoquímica', anio: 3, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Comercialización de Productos Biotecnológicos', anio: 3, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Comercialización de Productos Biotecnológicos', anio: 3, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Bioinformática', anio: 3, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Bioinformática', anio: 3, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Inmunología', anio: 3, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Inmunología', anio: 3, cuatrimestre: 2, estado: 'pendiente' },
   },
 
   // ─── CUARTO AÑO — 1° Cuatrimestre ──────────────────────────────────────────
   {
-    materia: { nombre: 'Biotecnología y Derecho', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Biotecnología y Derecho', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Ingeniería Genética II', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Ingeniería Genética II', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Biorreactores', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Biorreactores', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Cultivos Celulares', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Cultivos Celulares', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Estrategias Industriales', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Estrategias Industriales', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Proyecto Final de Licenciatura en Biotecnología', anio: 4, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Proyecto Final de Licenciatura en Biotecnología', anio: 4, cuatrimestre: 1, estado: 'pendiente' },
   },
 
   // ─── CUARTO AÑO — 2° Cuatrimestre ──────────────────────────────────────────
   {
-    materia: { nombre: 'Genómica y Proteómica', anio: 4, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Genómica y Proteómica', anio: 4, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Industrias y Procesos Biotecnológicos', anio: 4, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Industrias y Procesos Biotecnológicos', anio: 4, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Nanobiotecnología', anio: 4, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Nanobiotecnología', anio: 4, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Bioética', anio: 4, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Bioética', anio: 4, cuatrimestre: 2, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Desarrollo de Negocios Biotecnológicos', anio: 4, cuatrimestre: 2, estado: 'cursando' },
+    materia: { nombre: 'Desarrollo de Negocios Biotecnológicos', anio: 4, cuatrimestre: 2, estado: 'pendiente' },
   },
 
   // ─── QUINTO AÑO — 1° Cuatrimestre ──────────────────────────────────────────
   {
-    materia: { nombre: 'Biología de Sistemas', anio: 5, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Biología de Sistemas', anio: 5, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Laboratorio de Bioprocesos', anio: 5, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Laboratorio de Bioprocesos', anio: 5, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Laboratorio de Diagnóstico y Ciencias Forenses', anio: 5, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Laboratorio de Diagnóstico y Ciencias Forenses', anio: 5, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Optativa 1', anio: 5, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Optativa 1', anio: 5, cuatrimestre: 1, estado: 'pendiente' },
   },
   {
-    materia: { nombre: 'Optativa 2', anio: 5, cuatrimestre: 1, estado: 'cursando' },
+    materia: { nombre: 'Optativa 2', anio: 5, cuatrimestre: 1, estado: 'pendiente' },
   },
 ]

@@ -5,6 +5,7 @@ import type { EstadoMateria } from '@/lib/supabase/types'
 // ── Colores y etiquetas por estado ──────────────────────────────────────────
 
 const ESTADO_CONFIG: Record<EstadoMateria, { bg: string; border: string; dot: string; label: string }> = {
+  pendiente:       { bg: 'bg-brand-50',  border: 'border-brand-200',  dot: 'bg-brand-300',  label: '○ Pendiente' },
   aprobada:        { bg: 'bg-green-50',  border: 'border-green-200',  dot: 'bg-green-500',  label: '✓ Aprobada' },
   promocionada:    { bg: 'bg-purple-50', border: 'border-purple-200', dot: 'bg-purple-600', label: '⭐ Promovida' },
   cursando:        { bg: 'bg-blue-50',   border: 'border-blue-200',   dot: 'bg-blue-500',   label: '● En curso' },
@@ -29,6 +30,7 @@ function notaResumen(m: MateriaConNotas): string {
 
 function Leyenda() {
   const items: [EstadoMateria, string][] = [
+    ['pendiente',       'Pendiente'],
     ['aprobada',        'Aprobada'],
     ['promocionada',    'Promocionada'],
     ['cursando',        'En curso'],

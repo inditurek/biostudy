@@ -15,6 +15,7 @@ interface EditMateriaModalProps {
 }
 
 const ESTADOS: { value: EstadoMateria; label: string }[] = [
+  { value: 'pendiente',       label: 'Pendiente (no cursada)' },
   { value: 'cursando',        label: 'En curso' },
   { value: 'aprobada',        label: 'Aprobada' },
   { value: 'promocionada',    label: 'Promocionada' },
