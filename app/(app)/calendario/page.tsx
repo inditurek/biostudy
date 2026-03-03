@@ -1,13 +1,30 @@
-export default function CalendarioPage() {
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import CalendarioClient from '@/components/calendario/CalendarioClient'
+import { cargarEventosMes, cargarTodosFecha } from './actions'
+
+export default async function CalendarioPage() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const hoy = new Date()
+  const year     = hoy.getFullYear()
+  const month    = hoy.getMonth()   // 0-based
+  const todayStr = hoy.toISOString().slice(0, 10)  // 'YYYY-MM-DD'
+
+  const [eventosIniciales, todosIniciales] = await Promise.all([
+    cargarEventosMes(year, month),
+    cargarTodosFecha(todayStr),
+  ])
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50">
-      <div className="text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-brand-100 mx-auto">
-          <span className="text-3xl">📅</span>
-        </div>
-        <h1 className="font-fraunces text-2xl font-semibold text-brand-900">Calendario</h1>
-        <p className="mt-2 text-sm text-brand-400">Próximamente...</p>
-      </div>
-    </div>
+    <CalendarioClient
+      initialYear={year}
+      initialMonth={month}
+      initialEventos={eventosIniciales}
+      initialTodos={todosIniciales}
+      initialSelectedDate={todayStr}
+    />
   )
 }
