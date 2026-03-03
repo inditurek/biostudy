@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import type { MateriaConNotas } from './types'
 import type { EstadoMateria } from '@/lib/supabase/types'
 import { guardarNotas, agregarMateria } from '@/app/(app)/historial/actions'
@@ -49,16 +49,22 @@ export default function EditMateriaModal({
   cuatriDefault,
 }: EditMateriaModalProps) {
   const [isPending, startTransition] = useTransition()
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const esEdicion = !!materia
 
   if (!open) return null
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setErrorMsg(null)
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
       if (esEdicion && materia) {
-        await guardarNotas(materia.id, formData)
+        const result = await guardarNotas(materia.id, formData)
+        if (!result.ok) {
+          setErrorMsg(result.error ?? 'Error al guardar.')
+          return
+        }
       } else {
         await agregarMateria(formData)
       }
@@ -126,13 +132,20 @@ export default function EditMateriaModal({
           </div>
 
           {/* Notas — grid 2×3 */}
-          <div className="mb-6 grid grid-cols-2 gap-3">
+          <div className="mb-5 grid grid-cols-2 gap-3">
             <NotaInput name="p1"            label="Parcial 1"      defaultValue={materia?.notas?.p1} />
             <NotaInput name="p2"            label="Parcial 2"      defaultValue={materia?.notas?.p2} />
             <NotaInput name="recuperatorio" label="Recuperatorio"  defaultValue={materia?.notas?.recuperatorio} />
             <NotaInput name="cursada"       label="Nota cursada"   defaultValue={materia?.notas?.cursada} />
             <NotaInput name="final"         label="Final"          defaultValue={materia?.notas?.final} />
           </div>
+
+          {/* Error */}
+          {errorMsg && (
+            <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-600">
+              ⚠️ {errorMsg}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2.5">
             <button type="button" onClick={onClose} disabled={isPending}

@@ -8,7 +8,10 @@ import type { EstadoMateria } from '@/lib/supabase/types'
 // ─── Guardar notas de una materia ─────────────────────────────────────────────
 // Crea el registro notas_materia si no existe, o lo actualiza.
 
-export async function guardarNotas(materiaId: string, formData: FormData) {
+export async function guardarNotas(
+  materiaId: string,
+  formData: FormData
+): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -31,10 +34,18 @@ export async function guardarNotas(materiaId: string, formData: FormData) {
   }
 
   // Actualizar estado de la materia
-  await supabase
+  const { error: estadoError } = await supabase
     .from('materias')
     .update({ estado })
     .eq('id', materiaId)
+
+  if (estadoError) {
+    // El CHECK constraint rechaza el valor si la migración no se corrió
+    const msg = estadoError.message.includes('estado_valido')
+      ? `El estado "${estado}" no está habilitado en la base de datos. Corré la migración SQL en Supabase.`
+      : estadoError.message
+    return { ok: false, error: msg }
+  }
 
   // Upsert de notas (insert si no existe, update si existe)
   const { data: existente } = await supabase
@@ -49,12 +60,17 @@ export async function guardarNotas(materiaId: string, formData: FormData) {
       .update(notas)
       .eq('materia_id', materiaId)
   } else {
-    await supabase
-      .from('notas_materia')
-      .insert({ materia_id: materiaId, ...notas })
+    // Solo insertar si hay al menos una nota cargada
+    const hayNotas = Object.values(notas).some(v => v !== null)
+    if (hayNotas) {
+      await supabase
+        .from('notas_materia')
+        .insert({ materia_id: materiaId, ...notas })
+    }
   }
 
   revalidatePath('/historial')
+  return { ok: true }
 }
 
 // ─── Agregar materia nueva ────────────────────────────────────────────────────
