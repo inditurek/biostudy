@@ -85,15 +85,21 @@ export interface NotaMateria {
   final: number | null
 }
 
+export type RecurrenciaEvento = 'ninguna' | 'semanal' | 'quincenal' | 'mensual'
+
 export interface Evento {
   id: string
   usuario_id: string
   titulo: string
   tipo: TipoEvento
-  fecha: string         // 'YYYY-MM-DD'
-  hora_inicio: string | null   // 'HH:MM'
+  fecha: string                 // 'YYYY-MM-DD' — primera ocurrencia si es recurrente
+  hora_inicio: string | null    // 'HH:MM'
   hora_fin: string | null
   todo_el_dia: boolean
+  locacion: string | null       // requires migration 20260302_add_eventos_extras.sql
+  descripcion: string | null    // requires migration
+  recurrencia: RecurrenciaEvento // requires migration
+  recurrencia_fin: string | null // 'YYYY-MM-DD', requires migration
   creado_en: string
 }
 

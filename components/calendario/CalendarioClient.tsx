@@ -3,13 +3,14 @@
 import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import type { EventoRow, TodoRow } from '@/app/(app)/calendario/actions'
+import type { RecurrenciaEvento } from '@/lib/supabase/types'
 import {
   cargarEventosMes,
   cargarTodosFecha,
   crearTodo,
   toggleTodo,
   eliminarTodo,
-  eliminarEvento,
+  editarTodo,
 } from '@/app/(app)/calendario/actions'
 import EventoModal from './EventoModal'
 
@@ -57,6 +58,65 @@ function formatHora(h: string | null): string {
   return h.slice(0, 5)
 }
 
+/** Convierte una fecha YYYY-MM-DD a un objeto Date local (sin desfase UTC). */
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+/** Date → 'YYYY-MM-DD' usando partes locales (sin UTC). */
+function localDateToStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// ── Expansión de eventos recurrentes ─────────────────────────────────────────
+
+/**
+ * Expande los templates de eventos recurrentes en ocurrencias individuales
+ * dentro del mes dado. Los eventos no-recurrentes se devuelven tal cual.
+ * Las ocurrencias virtuales reciben el id `{baseId}__{fecha}`.
+ */
+function expandirEventos(rawEventos: EventoRow[], year: number, month: number): EventoRow[] {
+  const primerDia = new Date(year, month, 1)
+  const ultimoDia = new Date(year, month + 1, 0)   // último día del mes
+  const result: EventoRow[] = []
+
+  for (const ev of rawEventos) {
+    if (ev.recurrencia === 'ninguna') {
+      result.push(ev)
+      continue
+    }
+
+    const limit = ev.recurrencia_fin
+      ? parseLocalDate(ev.recurrencia_fin)
+      : new Date(2099, 11, 31)
+
+    let current = parseLocalDate(ev.fecha)
+
+    // Avanzar hasta la primera ocurrencia dentro (o después) del mes
+    while (current < primerDia) {
+      avanzarPorRecurrencia(current, ev.recurrencia)
+    }
+
+    // Recopilar ocurrencias dentro del mes (y dentro del límite)
+    while (current <= ultimoDia && current <= limit) {
+      const dateStr = localDateToStr(current)
+      result.push({ ...ev, id: `${ev.id}__${dateStr}`, fecha: dateStr })
+      avanzarPorRecurrencia(current, ev.recurrencia)
+    }
+  }
+
+  return result
+}
+
+function avanzarPorRecurrencia(d: Date, recurrencia: RecurrenciaEvento): void {
+  switch (recurrencia) {
+    case 'semanal':   d.setDate(d.getDate() + 7);   break
+    case 'quincenal': d.setDate(d.getDate() + 14);  break
+    case 'mensual':   d.setMonth(d.getMonth() + 1); break
+  }
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 
 interface Props {
@@ -76,14 +136,27 @@ export default function CalendarioClient({
 }: Props) {
   const todayStr = new Date().toISOString().slice(0, 10)
 
+  // Estado principal
   const [year,         setYear]         = useState(initialYear)
   const [month,        setMonth]        = useState(initialMonth)
-  const [eventos,      setEventos]      = useState<EventoRow[]>(initialEventos)
+  const [rawEventos,   setRawEventos]   = useState<EventoRow[]>(initialEventos)
   const [selectedDate, setSelectedDate] = useState(initialSelectedDate)
   const [todos,        setTodos]        = useState<TodoRow[]>(initialTodos)
-  const [showModal,    setShowModal]    = useState(false)
-  const [newTodo,      setNewTodo]      = useState('')
   const [isPending,    startTransition] = useTransition()
+
+  // Modal de evento
+  const [showModal,    setShowModal]    = useState(false)
+  const [editingEvento, setEditingEvento] = useState<EventoRow | null>(null)
+
+  // To-do nuevo
+  const [newTodo,      setNewTodo]      = useState('')
+
+  // Edición inline de todo
+  const [editingTodoId,   setEditingTodoId]   = useState<string | null>(null)
+  const [editingTodoText, setEditingTodoText] = useState('')
+
+  // Eventos expandidos (recurrentes → una entrada por ocurrencia)
+  const eventos = expandirEventos(rawEventos, year, month)
 
   // ── Navegación de mes ────────────────────────────────────────────────────────
 
@@ -96,7 +169,7 @@ export default function CalendarioClient({
     setMonth(nm)
     startTransition(async () => {
       const result = await cargarEventosMes(ny, nm)
-      setEventos(result)
+      setRawEventos(result)
     })
   }
 
@@ -107,6 +180,37 @@ export default function CalendarioClient({
     startTransition(async () => {
       const result = await cargarTodosFecha(dateStr)
       setTodos(result)
+    })
+  }
+
+  // ── Eventos — edición y creación ─────────────────────────────────────────────
+
+  function abrirNuevoEvento() {
+    setEditingEvento(null)
+    setShowModal(true)
+  }
+
+  function abrirEditarEvento(ev: EventoRow) {
+    // Si es ocurrencia virtual de recurrente → editar el template original
+    if (ev.id.includes('__')) {
+      const baseId   = ev.id.split('__')[0]
+      const template = rawEventos.find(e => e.id === baseId)
+      if (template) { setEditingEvento(template); setShowModal(true); return }
+    }
+    setEditingEvento(ev)
+    setShowModal(true)
+  }
+
+  function cerrarModal() {
+    setShowModal(false)
+    setEditingEvento(null)
+  }
+
+  function handleEventoGuardado() {
+    cerrarModal()
+    startTransition(async () => {
+      const refreshed = await cargarEventosMes(year, month)
+      setRawEventos(refreshed)
     })
   }
 
@@ -127,42 +231,40 @@ export default function CalendarioClient({
   }
 
   function handleToggleTodo(id: string, completado: boolean) {
-    // Optimistic update
     setTodos(prev => prev.map(t => t.id === id ? { ...t, completado } : t))
-    startTransition(async () => {
-      await toggleTodo(id, completado)
-    })
+    startTransition(async () => { await toggleTodo(id, completado) })
   }
 
   function handleDeleteTodo(id: string) {
     setTodos(prev => prev.filter(t => t.id !== id))
-    startTransition(async () => {
-      await eliminarTodo(id)
-    })
+    startTransition(async () => { await eliminarTodo(id) })
   }
 
-  // ── Después de crear un evento ───────────────────────────────────────────────
-
-  function handleEventoCreado() {
-    setShowModal(false)
-    startTransition(async () => {
-      const refreshed = await cargarEventosMes(year, month)
-      setEventos(refreshed)
-    })
+  function startEditTodo(todo: TodoRow) {
+    setEditingTodoId(todo.id)
+    setEditingTodoText(todo.texto)
   }
 
-  function handleDeleteEvento(id: string) {
-    setEventos(prev => prev.filter(e => e.id !== id))
-    startTransition(async () => {
-      await eliminarEvento(id)
-    })
+  function cancelEditTodo() {
+    setEditingTodoId(null)
+    setEditingTodoText('')
   }
 
-  // ── Generar celdas del mes ────────────────────────────────────────────────────
+  function handleSaveTodo(id: string) {
+    const texto = editingTodoText.trim()
+    if (!texto) { cancelEditTodo(); return }
+    // Optimistic update
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, texto } : t))
+    cancelEditTodo()
+    startTransition(async () => { await editarTodo(id, texto) })
+  }
+
+  // ── Celdas del mes ────────────────────────────────────────────────────────────
 
   const primerDia     = new Date(year, month, 1)
-  let   primerDow     = primerDia.getDay()          // 0=Dom
-  primerDow           = primerDow === 0 ? 6 : primerDow - 1  // 0=Lun
+  let   primerDow     = primerDia.getDay()
+  primerDow           = primerDow === 0 ? 6 : primerDow - 1  // 0 = Lun
+
   const diasEnMes     = new Date(year, month + 1, 0).getDate()
   const diasEnPrevMes = new Date(year, month, 0).getDate()
 
@@ -170,7 +272,7 @@ export default function CalendarioClient({
   const cells: Cell[] = []
 
   for (let i = primerDow - 1; i >= 0; i--) {
-    const d = diasEnPrevMes - i
+    const d  = diasEnPrevMes - i
     const pm = month === 0 ? 11 : month - 1
     const py = month === 0 ? year - 1 : year
     cells.push({ day: d, dateStr: toDateStr(py, pm, d), curMonth: false })
@@ -179,20 +281,20 @@ export default function CalendarioClient({
     cells.push({ day: d, dateStr: toDateStr(year, month, d), curMonth: true })
   }
   while (cells.length % 7 !== 0) {
-    const d   = cells.length - diasEnMes - primerDow + 1
-    const nm  = month === 11 ? 0 : month + 1
-    const ny  = month === 11 ? year + 1 : year
+    const d  = cells.length - diasEnMes - primerDow + 1
+    const nm = month === 11 ? 0  : month + 1
+    const ny = month === 11 ? year + 1 : year
     cells.push({ day: d, dateStr: toDateStr(ny, nm, d), curMonth: false })
   }
 
-  // Mapa de eventos por fecha para acceso rápido
+  // Mapa de eventos expandidos por fecha
   const eventosPorFecha: Record<string, EventoRow[]> = {}
   for (const ev of eventos) {
     if (!eventosPorFecha[ev.fecha]) eventosPorFecha[ev.fecha] = []
     eventosPorFecha[ev.fecha].push(ev)
   }
 
-  // Eventos del día seleccionado
+  // Eventos del día seleccionado, ordenados
   const eventosDelDia = (eventosPorFecha[selectedDate] ?? [])
     .slice()
     .sort((a, b) => {
@@ -243,7 +345,7 @@ export default function CalendarioClient({
 
           {/* Botón crear */}
           <button
-            onClick={() => setShowModal(true)}
+            onClick={abrirNuevoEvento}
             className="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(124,58,237,0.3)] transition hover:-translate-y-px hover:bg-brand-600"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -254,7 +356,7 @@ export default function CalendarioClient({
         </div>
       </div>
 
-      {/* ── Layout ── */}
+      {/* ── Layout principal ── */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
 
         {/* ── Grilla del mes ── */}
@@ -281,7 +383,8 @@ export default function CalendarioClient({
               const isSelected = dateStr === selectedDate
               const evs        = eventosPorFecha[dateStr] ?? []
               const isWeekend  = (() => {
-                const dow = new Date(dateStr).getDay()
+                const { y, m, d } = parseDateStr(dateStr)
+                const dow = new Date(y, m, d).getDay()
                 return dow === 0 || dow === 6
               })()
 
@@ -291,7 +394,6 @@ export default function CalendarioClient({
                   onClick={() => selectDay(dateStr)}
                   className={cn(
                     'min-h-[88px] cursor-pointer border-b border-r border-brand-50 p-2 transition',
-                    'last-of-type:border-r-0',
                     !curMonth && 'opacity-30',
                     isToday && !isSelected && 'bg-brand-50/60',
                     isSelected && 'bg-brand-100/50',
@@ -311,19 +413,21 @@ export default function CalendarioClient({
                     {day}
                   </div>
 
-                  {/* Eventos (máx 2 + "+N más") */}
+                  {/* Chips de eventos (máx 2 + "+N más") */}
                   <div className="flex flex-col gap-0.5">
                     {evs.slice(0, 2).map(ev => {
                       const cfg = TIPO_CONFIG[ev.tipo as TipoEvento]
                       return (
-                        <div
-                          key={ev.id}
-                          className="truncate rounded-[4px] px-1.5 py-px text-[10px] font-semibold"
-                          style={{}}
-                        >
-                          <span className={cn('inline-flex items-center gap-1 rounded px-1 py-px text-[10px]', cfg.chip, cfg.chipText)}>
+                        <div key={ev.id} className="truncate rounded-[4px] px-0.5">
+                          <span className={cn(
+                            'inline-flex w-full items-center gap-1 truncate rounded px-1 py-px text-[10px]',
+                            cfg.chip, cfg.chipText
+                          )}>
                             <span className={cn('h-1.5 w-1.5 flex-shrink-0 rounded-full', cfg.dot)} />
                             <span className="truncate">{ev.titulo}</span>
+                            {ev.recurrencia !== 'ninguna' && (
+                              <span className="flex-shrink-0 opacity-60">↺</span>
+                            )}
                           </span>
                         </div>
                       )
@@ -357,7 +461,12 @@ export default function CalendarioClient({
                 {eventosDelDia.map(ev => {
                   const cfg = TIPO_CONFIG[ev.tipo as TipoEvento]
                   return (
-                    <div key={ev.id} className="group flex items-start gap-3 py-3">
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={() => abrirEditarEvento(ev)}
+                      className="group flex w-full items-start gap-3 py-3 text-left transition hover:bg-brand-50 rounded-xl px-2 -mx-2"
+                    >
                       <span className={cn('mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full', cfg.dot)} />
                       <div className="min-w-0 flex-1">
                         <p className="text-[13px] font-semibold text-brand-900">{ev.titulo}</p>
@@ -367,23 +476,31 @@ export default function CalendarioClient({
                             : `${formatHora(ev.hora_inicio)}${ev.hora_fin ? ` – ${formatHora(ev.hora_fin)}` : ''}`
                           }
                         </p>
-                        <span className={cn(
-                          'mt-1 inline-block rounded-full border px-2 py-px text-[10px] font-semibold',
-                          cfg.chip, cfg.chipText
-                        )}>
-                          {cfg.label}
-                        </span>
+                        {ev.locacion && (
+                          <p className="mt-0.5 text-[11px] text-brand-400">
+                            📍 {ev.locacion}
+                          </p>
+                        )}
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className={cn(
+                            'inline-block rounded-full border px-2 py-px text-[10px] font-semibold',
+                            cfg.chip, cfg.chipText
+                          )}>
+                            {cfg.label}
+                          </span>
+                          {ev.recurrencia !== 'ninguna' && (
+                            <span className="text-[10px] text-brand-300">↺ Recurrente</span>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleDeleteEvento(ev.id)}
-                        className="mt-1 flex-shrink-0 rounded p-1 text-brand-200 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
-                        title="Eliminar evento"
+                      {/* Ícono "editar" que aparece al hover */}
+                      <svg
+                        className="mt-1 h-3.5 w-3.5 flex-shrink-0 text-brand-300 opacity-0 transition group-hover:opacity-100"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                       >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                        <path strokeLinecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 013 3L12 14l-4 1 1-4 7.5-7.5z" />
+                      </svg>
+                    </button>
                   )
                 })}
               </div>
@@ -408,10 +525,11 @@ export default function CalendarioClient({
               {todos.map(todo => (
                 <div
                   key={todo.id}
-                  className="group flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-brand-50"
+                  className="group flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition hover:bg-brand-50"
                 >
                   {/* Checkbox */}
                   <button
+                    type="button"
                     onClick={() => handleToggleTodo(todo.id, !todo.completado)}
                     className={cn(
                       'flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition',
@@ -427,23 +545,56 @@ export default function CalendarioClient({
                     )}
                   </button>
 
-                  {/* Texto */}
-                  <p className={cn(
-                    'flex-1 text-[13px] font-medium leading-snug',
-                    todo.completado ? 'text-brand-300 line-through' : 'text-brand-900'
-                  )}>
-                    {todo.texto}
-                  </p>
+                  {/* Texto o input de edición */}
+                  {editingTodoId === todo.id ? (
+                    <input
+                      type="text"
+                      value={editingTodoText}
+                      onChange={e => setEditingTodoText(e.target.value)}
+                      onBlur={() => handleSaveTodo(todo.id)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter')  handleSaveTodo(todo.id)
+                        if (e.key === 'Escape') cancelEditTodo()
+                      }}
+                      autoFocus
+                      className="flex-1 rounded-lg border border-brand-300 bg-white px-2 py-0.5 text-[13px] text-brand-900 outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-400/20"
+                    />
+                  ) : (
+                    <p className={cn(
+                      'flex-1 text-[13px] font-medium leading-snug',
+                      todo.completado ? 'text-brand-300 line-through' : 'text-brand-900'
+                    )}>
+                      {todo.texto}
+                    </p>
+                  )}
 
-                  {/* Eliminar */}
-                  <button
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    className="flex-shrink-0 rounded p-1 text-brand-200 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
-                  >
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  {/* Acciones (lápiz + X) */}
+                  {editingTodoId !== todo.id && (
+                    <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                      {/* Editar */}
+                      <button
+                        type="button"
+                        onClick={() => startEditTodo(todo)}
+                        className="rounded p-1 text-brand-300 transition hover:bg-brand-100 hover:text-brand-600"
+                        title="Editar tarea"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 013 3L12 14l-4 1 1-4 7.5-7.5z" />
+                        </svg>
+                      </button>
+                      {/* Eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTodo(todo.id)}
+                        className="rounded p-1 text-brand-200 transition hover:bg-red-50 hover:text-red-500"
+                        title="Eliminar tarea"
+                      >
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -477,12 +628,13 @@ export default function CalendarioClient({
         </div>
       </div>
 
-      {/* ── Modal crear evento ── */}
+      {/* ── Modal crear / editar evento ── */}
       {showModal && (
         <EventoModal
           selectedDate={selectedDate}
-          onClose={() => setShowModal(false)}
-          onCreado={handleEventoCreado}
+          evento={editingEvento ?? undefined}
+          onClose={cerrarModal}
+          onGuardado={handleEventoGuardado}
         />
       )}
     </div>
