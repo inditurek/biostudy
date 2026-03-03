@@ -25,7 +25,7 @@ function fmt(n: number | null): string {
 type EstadoBadgeProps = { estado: EstadoMateria }
 function EstadoBadge({ estado }: EstadoBadgeProps) {
   const map: Record<EstadoMateria, { label: string; cls: string }> = {
-    pendiente:       { label: '○ Pendiente',        cls: 'bg-brand-50 text-brand-400 border border-brand-200' },
+    pendiente:       { label: '○ Pendiente',        cls: 'bg-teal-50 text-teal-600 border border-teal-200' },
     aprobada:        { label: '✓ Aprobada',         cls: 'bg-green-50 text-green-700 border border-green-200' },
     promocionada:    { label: '⭐ Promocionada',    cls: 'bg-purple-50 text-purple-700 border border-purple-200' },
     cursando:        { label: '● En curso',          cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
@@ -57,9 +57,11 @@ function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar
         <span className="text-[13px] font-bold uppercase tracking-wider text-brand-500">
           {emoji} Cuatrimestre {cuatrimestre}
         </span>
-        <span className="text-xs font-semibold text-brand-300">
-          {promedio !== null ? `Promedio: ${fmt(promedio)}` : 'En curso'}
-        </span>
+        {promedio !== null && (
+          <span className="text-xs font-semibold text-brand-300">
+            Promedio: {fmt(promedio)}
+          </span>
+        )}
       </div>
 
       <table className="mb-4 w-full border-collapse">

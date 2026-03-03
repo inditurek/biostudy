@@ -47,25 +47,27 @@ export async function guardarNotas(
     return { ok: false, error: msg }
   }
 
-  // Upsert de notas (insert si no existe, update si existe)
+  // Upsert de notas — maybeSingle evita error cuando no existe el registro
   const { data: existente } = await supabase
     .from('notas_materia')
     .select('id')
     .eq('materia_id', materiaId)
-    .single()
+    .maybeSingle()
 
   if (existente) {
-    await supabase
+    const { error: updateNotasError } = await supabase
       .from('notas_materia')
       .update(notas)
       .eq('materia_id', materiaId)
+    if (updateNotasError) return { ok: false, error: updateNotasError.message }
   } else {
     // Solo insertar si hay al menos una nota cargada
     const hayNotas = Object.values(notas).some(v => v !== null)
     if (hayNotas) {
-      await supabase
+      const { error: insertNotasError } = await supabase
         .from('notas_materia')
         .insert({ materia_id: materiaId, ...notas })
+      if (insertNotasError) return { ok: false, error: insertNotasError.message }
     }
   }
 
