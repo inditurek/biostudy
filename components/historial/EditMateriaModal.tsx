@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import type { MateriaConNotas } from './types'
 import type { EstadoMateria } from '@/lib/supabase/types'
 import { guardarNotas, agregarMateria } from '@/app/(app)/historial/actions'
@@ -48,6 +49,7 @@ export default function EditMateriaModal({
   anioDefault,
   cuatriDefault,
 }: EditMateriaModalProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const esEdicion = !!materia
@@ -59,16 +61,22 @@ export default function EditMateriaModal({
     setErrorMsg(null)
     const formData = new FormData(e.currentTarget)
     startTransition(async () => {
-      if (esEdicion && materia) {
-        const result = await guardarNotas(materia.id, formData)
-        if (!result.ok) {
-          setErrorMsg(result.error ?? 'Error al guardar.')
-          return
+      try {
+        if (esEdicion && materia) {
+          const result = await guardarNotas(materia.id, formData)
+          if (!result.ok) {
+            setErrorMsg(result.error ?? 'Error al guardar.')
+            return
+          }
+        } else {
+          await agregarMateria(formData)
         }
-      } else {
-        await agregarMateria(formData)
+        // Forzar refresco del Server Component para mostrar los datos actualizados
+        router.refresh()
+        onClose()
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : 'Error inesperado al guardar.')
       }
-      onClose()
     })
   }
 

@@ -47,15 +47,27 @@ export async function guardarNotas(
     return { ok: false, error: msg }
   }
 
-  // Upsert de notas — crea el registro si no existe, lo actualiza si ya existe
-  const { error: notasError } = await supabase
+  // Guardar notas: primero buscar si ya existe el registro, luego INSERT o UPDATE
+  const { data: existente, error: selectError } = await supabase
     .from('notas_materia')
-    .upsert(
-      { materia_id: materiaId, ...notas },
-      { onConflict: 'materia_id' }
-    )
+    .select('id')
+    .eq('materia_id', materiaId)
+    .maybeSingle()
 
-  if (notasError) return { ok: false, error: notasError.message }
+  if (selectError) return { ok: false, error: selectError.message }
+
+  if (existente) {
+    const { error: updateError } = await supabase
+      .from('notas_materia')
+      .update(notas)
+      .eq('id', existente.id)
+    if (updateError) return { ok: false, error: updateError.message }
+  } else {
+    const { error: insertError } = await supabase
+      .from('notas_materia')
+      .insert({ materia_id: materiaId, ...notas })
+    if (insertError) return { ok: false, error: insertError.message }
+  }
 
   revalidatePath('/historial')
   return { ok: true }
