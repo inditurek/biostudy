@@ -25,7 +25,7 @@ function fmt(n: number | null): string {
 type EstadoBadgeProps = { estado: EstadoMateria }
 function EstadoBadge({ estado }: EstadoBadgeProps) {
   const map: Record<EstadoMateria, { label: string; cls: string }> = {
-    pendiente:       { label: '○ Pendiente',        cls: 'bg-teal-50 text-teal-600 border border-teal-200' },
+    pendiente:       { label: '○ Pendiente',        cls: 'bg-yellow-50 text-yellow-700 border border-yellow-200' },
     aprobada:        { label: '✓ Aprobada',         cls: 'bg-green-50 text-green-700 border border-green-200' },
     promocionada:    { label: '⭐ Promocionada',    cls: 'bg-purple-50 text-purple-700 border border-purple-200' },
     cursando:        { label: '● En curso',          cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
@@ -67,7 +67,7 @@ function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar
       <table className="mb-4 w-full border-collapse">
         <thead>
           <tr>
-            {['Materia','P1','P2','Recup.','Cursada','Final','Estado',''].map((h, i) => (
+            {['Materia','P1','P2','Recup.','Final','Cursada','Estado',''].map((h, i) => (
               <th key={i} className={cn(
                 'py-2 text-[11px] font-semibold uppercase tracking-wider text-brand-300',
                 i === 0 ? 'w-[30%] text-left' : i === 7 ? 'w-[4%]' : 'w-[11%] text-center'
@@ -82,8 +82,8 @@ function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar
               <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.p1 ?? null))}>{fmt(m.notas?.p1 ?? null)}</td>
               <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.p2 ?? null))}>{fmt(m.notas?.p2 ?? null)}</td>
               <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.recuperatorio ?? null))}>{fmt(m.notas?.recuperatorio ?? null)}</td>
-              <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.cursada ?? null))}>{fmt(m.notas?.cursada ?? null)}</td>
               <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.final ?? null))}>{fmt(m.notas?.final ?? null)}</td>
+              <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.cursada ?? null))}>{fmt(m.notas?.cursada ?? null)}</td>
               <td className="py-3 text-center"><EstadoBadge estado={m.estado} /></td>
               <td className="py-3 text-center">
                 <button

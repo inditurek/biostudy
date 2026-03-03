@@ -1,16 +1,22 @@
 import { cn } from '@/lib/utils'
 import type { AnioData, MateriaConNotas } from './types'
 import type { EstadoMateria } from '@/lib/supabase/types'
+import { CORRELATIVAS, estaDesbloqueada } from '@/lib/data/correlativas'
+
+// ── Tipo de display (incluye estado derivado "bloqueada") ─────────────────────
+
+type EstadoDisplay = EstadoMateria | 'bloqueada'
 
 // ── Colores y etiquetas por estado ──────────────────────────────────────────
 
-const ESTADO_CONFIG: Record<EstadoMateria, { bg: string; border: string; dot: string; label: string }> = {
-  pendiente:       { bg: 'bg-teal-50',   border: 'border-teal-200',   dot: 'bg-teal-400',   label: '○ Pendiente' },
-  aprobada:        { bg: 'bg-green-50',  border: 'border-green-200',  dot: 'bg-green-500',  label: '✓ Aprobada' },
-  promocionada:    { bg: 'bg-purple-50', border: 'border-purple-200', dot: 'bg-purple-600', label: '⭐ Promovida' },
-  cursando:        { bg: 'bg-blue-50',   border: 'border-blue-200',   dot: 'bg-blue-500',   label: '● En curso' },
-  final_pendiente: { bg: 'bg-amber-50',  border: 'border-amber-200',  dot: 'bg-amber-500',  label: '⏳ Final pend.' },
-  libre:           { bg: 'bg-red-50',    border: 'border-red-200',    dot: 'bg-red-500',    label: '✗ Libre' },
+const ESTADO_CONFIG: Record<EstadoDisplay, { bg: string; border: string; dot: string; label: string }> = {
+  pendiente:       { bg: 'bg-yellow-50',  border: 'border-yellow-200', dot: 'bg-yellow-400', label: '○ Pendiente' },
+  bloqueada:       { bg: 'bg-gray-50',    border: 'border-gray-200',   dot: 'bg-gray-300',   label: '🔒 Bloqueada' },
+  aprobada:        { bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: '✓ Aprobada' },
+  promocionada:    { bg: 'bg-purple-50',  border: 'border-purple-200', dot: 'bg-purple-600', label: '⭐ Promovida' },
+  cursando:        { bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-500',   label: '● En curso' },
+  final_pendiente: { bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-500',  label: '⏳ Final pend.' },
+  libre:           { bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: '✗ Libre' },
 }
 
 function fmt(n: number | null): string {
@@ -29,12 +35,13 @@ function notaResumen(m: MateriaConNotas): string {
 // ── Leyenda ──────────────────────────────────────────────────────────────────
 
 function Leyenda() {
-  const items: [EstadoMateria, string][] = [
+  const items: [EstadoDisplay, string][] = [
     ['aprobada',        'Aprobada'],
     ['promocionada',    'Promocionada'],
     ['cursando',        'En curso'],
     ['final_pendiente', 'Final pendiente'],
     ['pendiente',       'Pendiente'],
+    ['bloqueada',       'Bloqueada'],
     ['libre',           'Libre'],
   ]
   return (
@@ -54,24 +61,61 @@ function Leyenda() {
 
 // ── Tarjeta de materia ───────────────────────────────────────────────────────
 
-function MateriaCard({ m }: { m: MateriaConNotas }) {
-  const cfg = ESTADO_CONFIG[m.estado]
+interface MateriaCardProps {
+  m: MateriaConNotas
+  estadoMap: Record<string, EstadoMateria>
+}
+
+function MateriaCard({ m, estadoMap }: MateriaCardProps) {
+  // Determinar si la materia está bloqueada por correlativas
+  const prereqs = CORRELATIVAS[m.nombre] ?? []
+  const bloqueada =
+    m.estado === 'pendiente' &&
+    prereqs.length > 0 &&
+    !estaDesbloqueada(m.nombre, estadoMap)
+
+  const display: EstadoDisplay = bloqueada ? 'bloqueada' : m.estado
+  const cfg = ESTADO_CONFIG[display]
   const resumen = notaResumen(m)
 
+  // Tooltip con los prerequisitos bloqueantes
+  const prereqsBloqueantes = bloqueada
+    ? prereqs.filter((p) => {
+        const e = estadoMap[p]
+        return !e || (e !== 'aprobada' && e !== 'promocionada')
+      })
+    : []
+
   return (
-    <div className={cn(
-      'rounded-xl border p-3 transition hover:shadow-sm',
-      cfg.bg,
-      cfg.border,
-    )}>
+    <div
+      className={cn(
+        'rounded-xl border p-3 transition hover:shadow-sm',
+        cfg.bg,
+        cfg.border,
+        bloqueada && 'opacity-70'
+      )}
+      title={
+        prereqsBloqueantes.length > 0
+          ? `Requiere: ${prereqsBloqueantes.join(', ')}`
+          : undefined
+      }
+    >
       <div className="flex items-start gap-2">
         <span className={cn('mt-1 h-2 w-2 flex-shrink-0 rounded-full', cfg.dot)} />
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold leading-tight text-brand-900 line-clamp-2">
+          <p className={cn(
+            'text-[12px] font-semibold leading-tight line-clamp-2',
+            bloqueada ? 'text-gray-400' : 'text-brand-900'
+          )}>
             {m.nombre}
           </p>
-          {resumen && (
+          {resumen && !bloqueada && (
             <p className="mt-1 text-[11px] text-brand-400">{resumen}</p>
+          )}
+          {bloqueada && prereqsBloqueantes.length > 0 && (
+            <p className="mt-1 text-[10px] text-gray-400 leading-tight">
+              Falta: {prereqsBloqueantes[0]}{prereqsBloqueantes.length > 1 ? ` +${prereqsBloqueantes.length - 1}` : ''}
+            </p>
           )}
         </div>
       </div>
@@ -84,7 +128,12 @@ function MateriaCard({ m }: { m: MateriaConNotas }) {
 const ORDINAL = ['', 'Primer', 'Segundo', 'Tercer', 'Cuarto', 'Quinto']
 const CUATRI_EMOJI = ['', '📘', '📗']
 
-function ColumnaAnio({ data }: { data: AnioData }) {
+interface ColumnaAnioProps {
+  data: AnioData
+  estadoMap: Record<string, EstadoMateria>
+}
+
+function ColumnaAnio({ data, estadoMap }: ColumnaAnioProps) {
   const totalMaterias = data.cuatrimestres.flatMap(c => c.materias).length
   const aprobadas = data.aprobadas + data.promocionadas
 
@@ -106,7 +155,7 @@ function ColumnaAnio({ data }: { data: AnioData }) {
           </p>
           <div className="flex flex-col gap-1.5">
             {c.materias.map((m) => (
-              <MateriaCard key={m.id} m={m} />
+              <MateriaCard key={m.id} m={m} estadoMap={estadoMap} />
             ))}
           </div>
         </div>
@@ -130,12 +179,22 @@ export default function CorrelativasGrid({ anios }: CorrelativasGridProps) {
     )
   }
 
+  // Construir mapa global nombre → estado para evaluar correlativas
+  const estadoMap: Record<string, EstadoMateria> = {}
+  for (const anio of anios) {
+    for (const cuatri of anio.cuatrimestres) {
+      for (const m of cuatri.materias) {
+        estadoMap[m.nombre] = m.estado
+      }
+    }
+  }
+
   return (
     <div>
       <Leyenda />
       <div className="flex gap-4 overflow-x-auto pb-4">
         {anios.map((data) => (
-          <ColumnaAnio key={data.anio} data={data} />
+          <ColumnaAnio key={data.anio} data={data} estadoMap={estadoMap} />
         ))}
       </div>
     </div>

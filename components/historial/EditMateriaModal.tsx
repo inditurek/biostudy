@@ -136,8 +136,8 @@ export default function EditMateriaModal({
             <NotaInput name="p1"            label="Parcial 1"      defaultValue={materia?.notas?.p1} />
             <NotaInput name="p2"            label="Parcial 2"      defaultValue={materia?.notas?.p2} />
             <NotaInput name="recuperatorio" label="Recuperatorio"  defaultValue={materia?.notas?.recuperatorio} />
-            <NotaInput name="cursada"       label="Nota cursada"   defaultValue={materia?.notas?.cursada} />
             <NotaInput name="final"         label="Final"          defaultValue={materia?.notas?.final} />
+            <NotaInput name="cursada"       label="Nota cursada"   defaultValue={materia?.notas?.cursada} />
           </div>
 
           {/* Error */}
