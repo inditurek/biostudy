@@ -5,49 +5,43 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { EstadoMateria } from '@/lib/supabase/types'
 
+// ─── Tipos ────────────────────────────────────────────────────────────────────
+
+export interface NotasInput {
+  p1:            number | null
+  p2:            number | null
+  recuperatorio: number | null
+  cursada:       number | null
+  final:         number | null
+}
+
 // ─── Guardar notas de una materia ─────────────────────────────────────────────
-// Crea el registro notas_materia si no existe, o lo actualiza.
+// Recibe los valores directamente (no FormData) para evitar problemas de
+// serialización en producción.
 
 export async function guardarNotas(
   materiaId: string,
-  formData: FormData
+  estado:    EstadoMateria,
+  notas:     NotasInput
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Parsear campos — vacío → null
-  function parseNota(key: string): number | null {
-    const val = (formData.get(key) as string | null)?.trim()
-    if (!val) return null
-    const n = parseFloat(val)
-    return isNaN(n) ? null : n
-  }
-
-  const estado = formData.get('estado') as EstadoMateria
-  const notas = {
-    p1:            parseNota('p1'),
-    p2:            parseNota('p2'),
-    recuperatorio: parseNota('recuperatorio'),
-    cursada:       parseNota('cursada'),
-    final:         parseNota('final'),
-  }
-
-  // Actualizar estado de la materia
+  // 1. Actualizar estado de la materia
   const { error: estadoError } = await supabase
     .from('materias')
     .update({ estado })
     .eq('id', materiaId)
 
   if (estadoError) {
-    // El CHECK constraint rechaza el valor si la migración no se corrió
     const msg = estadoError.message.includes('estado_valido')
       ? `El estado "${estado}" no está habilitado en la base de datos. Corré la migración SQL en Supabase.`
       : estadoError.message
     return { ok: false, error: msg }
   }
 
-  // Guardar notas: primero buscar si ya existe el registro, luego INSERT o UPDATE
+  // 2. Guardar notas: SELECT → INSERT o UPDATE
   const { data: existente, error: selectError } = await supabase
     .from('notas_materia')
     .select('id')
@@ -75,51 +69,49 @@ export async function guardarNotas(
 
 // ─── Agregar materia nueva ────────────────────────────────────────────────────
 
-export async function agregarMateria(formData: FormData) {
+export interface AgregarMateriaInput {
+  nombre:       string
+  anio:         number
+  cuatrimestre: 1 | 2
+  estado:       EstadoMateria
+  notas:        NotasInput
+}
+
+export async function agregarMateria(
+  input: AgregarMateriaInput
+): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const nombre = (formData.get('nombre') as string).trim()
-  const anio = parseInt(formData.get('anio') as string)
-  const cuatrimestre = parseInt(formData.get('cuatrimestre') as string) as 1 | 2
-  const estado = (formData.get('estado') as EstadoMateria) || 'cursando'
+  const { nombre, anio, cuatrimestre, estado, notas } = input
 
-  if (!nombre || !anio || !cuatrimestre) throw new Error('Datos incompletos')
+  if (!nombre.trim() || !anio || !cuatrimestre) {
+    return { ok: false, error: 'Datos incompletos' }
+  }
 
-  const { data: materia, error } = await supabase
+  const { data: materia, error: insertMateriaError } = await supabase
     .from('materias')
-    .insert({ usuario_id: user.id, nombre, anio, cuatrimestre, estado })
+    .insert({ usuario_id: user.id, nombre: nombre.trim(), anio, cuatrimestre, estado })
     .select('id')
     .single()
 
-  if (error) throw new Error(error.message)
+  if (insertMateriaError) return { ok: false, error: insertMateriaError.message }
 
-  // Si viene con notas, insertarlas
-  function parseNota(key: string): number | null {
-    const val = (formData.get(key) as string | null)?.trim()
-    if (!val) return null
-    const n = parseFloat(val)
-    return isNaN(n) ? null : n
-  }
-
-  const p1 = parseNota('p1')
-  const p2 = parseNota('p2')
-  const recuperatorio = parseNota('recuperatorio')
-  const cursada = parseNota('cursada')
-  const final_ = parseNota('final')
-
-  if (p1 !== null || p2 !== null || cursada !== null || final_ !== null) {
-    await supabase
+  // Si hay al menos una nota, insertar el registro
+  const hayNotas = Object.values(notas).some(v => v !== null)
+  if (hayNotas) {
+    const { error: insertNotasError } = await supabase
       .from('notas_materia')
-      .insert({ materia_id: materia.id, p1, p2, recuperatorio, cursada, final: final_ })
+      .insert({ materia_id: materia.id, ...notas })
+    if (insertNotasError) return { ok: false, error: insertNotasError.message }
   }
 
   revalidatePath('/historial')
+  return { ok: true }
 }
 
 // ─── Cargar plan inicial desde seed ──────────────────────────────────────────
-// Wrapper void para usar en <form action={...}> (Next.js requiere Promise<void>)
 
 export async function cargarMateriasAction(): Promise<void> {
   const { cargarMateriasIniciales } = await import('@/lib/data/cargar-materias')
