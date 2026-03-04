@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Breadcrumb from '@/components/layout/Breadcrumb'
+import GuiaClient from '@/components/guia/GuiaClient'
+import type { ProgresoGuiaRow } from '@/app/(app)/cuadernos/guia/actions'
 
 interface Props {
   params: { id: string; sep: string }
@@ -69,6 +71,13 @@ export default async function SeparadorDetallePage({ params }: Props) {
     .select('*')
     .eq('separador_id', separador.id)
     .order('creado_en', { ascending: false })
+
+  // Progreso de la guía de estudio para este separador
+  const { data: progresoGuia } = await supabase
+    .from('progreso_guia')
+    .select('*')
+    .eq('separador_id', separador.id)
+    .maybeSingle()
 
   return (
     <div className="p-10">
@@ -159,20 +168,18 @@ export default async function SeparadorDetallePage({ params }: Props) {
           </div>
         )}
 
-        {/* Guía de Estudio — placeholder */}
+        {/* Guía de Estudio */}
         <div className="mt-10 border-t border-brand-100 pt-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-6 flex items-center justify-between">
             <div>
               <h2 className="font-fraunces text-base font-semibold text-brand-900">Guía de Estudio</h2>
               <p className="mt-0.5 text-sm text-brand-400">Tu plan de estudio personalizado para este separador</p>
             </div>
-            <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-500">
-              Próximamente
-            </span>
           </div>
-          <div className="flex items-center justify-center rounded-2xl border border-dashed border-brand-200 py-10">
-            <p className="text-sm text-brand-300">La Guía de Estudio se activa en la siguiente fase</p>
-          </div>
+          <GuiaClient
+            separadorId={separador.id}
+            initialProgreso={(progresoGuia as ProgresoGuiaRow) ?? null}
+          />
         </div>
       </div>
     </div>
