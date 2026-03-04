@@ -91,30 +91,50 @@ function expandirEventos(rawEventos: EventoRow[], year: number, month: number): 
       ? parseLocalDate(ev.recurrencia_fin)
       : new Date(2099, 11, 31)
 
-    let current = parseLocalDate(ev.fecha)
+    const origen = parseLocalDate(ev.fecha)
 
-    // Avanzar hasta la primera ocurrencia dentro (o después) del mes
-    while (current < primerDia) {
-      avanzarPorRecurrencia(current, ev.recurrencia)
+    if (ev.recurrencia === 'mensual') {
+      // N-ésimo día-de-semana del mes (ej: "2.º lunes de cada mes")
+      const n   = Math.ceil(origen.getDate() / 7)
+      const dow = origen.getDay()
+      const ocurrencia = getNthWeekdayOfMonth(year, month, dow, n)
+      if (ocurrencia >= primerDia && ocurrencia <= ultimoDia && ocurrencia >= origen && ocurrencia <= limit) {
+        const dateStr = localDateToStr(ocurrencia)
+        result.push({ ...ev, id: `${ev.id}__${dateStr}`, fecha: dateStr })
+      }
+      continue
     }
 
-    // Recopilar ocurrencias dentro del mes (y dentro del límite)
+    // semanal / quincenal — avance fijo por días
+    const step = ev.recurrencia === 'semanal' ? 7 : 14
+    const current = new Date(origen)
+    while (current < primerDia) current.setDate(current.getDate() + step)
     while (current <= ultimoDia && current <= limit) {
       const dateStr = localDateToStr(current)
       result.push({ ...ev, id: `${ev.id}__${dateStr}`, fecha: dateStr })
-      avanzarPorRecurrencia(current, ev.recurrencia)
+      current.setDate(current.getDate() + step)
     }
   }
 
   return result
 }
 
-function avanzarPorRecurrencia(d: Date, recurrencia: RecurrenciaEvento): void {
-  switch (recurrencia) {
-    case 'semanal':   d.setDate(d.getDate() + 7);   break
-    case 'quincenal': d.setDate(d.getDate() + 14);  break
-    case 'mensual':   d.setMonth(d.getMonth() + 1); break
+/**
+ * Dado un año/mes y un día de la semana (0=Dom … 6=Sáb),
+ * devuelve la fecha de la N-ésima ocurrencia de ese día en ese mes.
+ * Si la N-ésima no existe (ej: 5.º lunes en un mes corto), retrocede a la 4.ª.
+ */
+function getNthWeekdayOfMonth(year: number, month: number, dayOfWeek: number, n: number): Date {
+  const firstDow = new Date(year, month, 1).getDay()   // 0=Dom
+  let diff = dayOfWeek - firstDow
+  if (diff < 0) diff += 7
+  const firstOccurrence = 1 + diff                     // día del mes (1-based)
+  const date = new Date(year, month, firstOccurrence + (n - 1) * 7)
+  // Si se fue al mes siguiente, usar la (n-1)-ésima en su lugar
+  if (date.getMonth() !== month) {
+    return new Date(year, month, firstOccurrence + (n - 2) * 7)
   }
+  return date
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────

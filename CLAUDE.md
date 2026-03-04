@@ -1,5 +1,25 @@
 # CLAUDE.md — StudyLab
 
+## Tech Stack
+
+This project uses TypeScript and JavaScript with Supabase as the backend. Always prefer TypeScript for new files. Use Supabase client libraries and raw SQL only for migrations.
+
+---
+
+## Calendar & Date Logic
+
+When implementing date/calendar logic (recurrence, scheduling, etc.), always clarify the exact recurrence semantics with the user before coding. For example: 'every Monday' means the Nth weekday-of-month, NOT the Nth day-of-month.
+
+---
+
+## Workflow Resilience
+
+When a task involves multiple sequential steps (e.g., migration → commit → push → PR), break it into checkpoints and commit/save progress at each step so that rate limits or interruptions don't lose work.
+
+Always use the `gh` CLI to create pull requests whenever possible. Example: `gh pr create --title "..." --body "..."`. Confirm success by running `gh pr view` and returning the PR URL.
+
+---
+
 ## ¿Qué es este proyecto?
 
 StudyLab es una aplicación web personal de gestión académica universitaria. Su objetivo

@@ -18,6 +18,17 @@ const TIPOS: { value: TipoEvento; label: string; dot: string; ring: string }[] =
   { value: 'sprint',   label: 'Sprint',   dot: 'bg-yellow-500', ring: 'ring-yellow-400' },
 ]
 
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
+const ORDINALS = ['','1.er','2.º','3.er','4.º','5.º']
+
+function mensualHint(fecha: string): string {
+  if (!fecha) return ''
+  const [y, m, d] = fecha.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const n = Math.ceil(date.getDate() / 7)
+  return `Cada mes, el ${ORDINALS[n] ?? `${n}.º`} ${DIAS[date.getDay()]}`
+}
+
 const RECURRENCIAS: { value: RecurrenciaEvento; label: string }[] = [
   { value: 'ninguna',   label: 'No se repite'       },
   { value: 'semanal',   label: 'Cada semana'        },
@@ -245,6 +256,11 @@ export default function EventoModal({ selectedDate, evento, onClose, onGuardado 
               <option key={r.value} value={r.value}>{r.label}</option>
             ))}
           </select>
+          {recurrencia === 'mensual' && fecha && (
+            <p className="mt-1 text-[11px] text-brand-400">
+              {mensualHint(fecha)}
+            </p>
+          )}
         </div>
 
         {/* Repetir hasta (solo si hay recurrencia) */}
