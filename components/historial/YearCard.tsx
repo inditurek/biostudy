@@ -7,7 +7,6 @@ import EditMateriaModal from './EditMateriaModal'
 import type { EstadoMateria } from '@/lib/supabase/types'
 
 const ORDINAL = ['', 'Primer', 'Segundo', 'Tercer', 'Cuarto', 'Quinto']
-const CUATRI_COLOR = ['', '#7c3aed', '#0d9488']
 
 // Colores para notas
 function notaColor(n: number | null): string {
@@ -117,9 +116,10 @@ function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar
 interface YearCardProps {
   data: AnioData
   defaultOpen?: boolean
+  onRefresh?: () => Promise<void>
 }
 
-export default function YearCard({ data, defaultOpen = false }: YearCardProps) {
+export default function YearCard({ data, defaultOpen = false, onRefresh }: YearCardProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [editMateria, setEditMateria] = useState<MateriaConNotas | null>(null)
   const [agregarConfig, setAgregarConfig] = useState<{ anio: number; cuatri: 1 | 2 } | null>(null)
@@ -206,6 +206,7 @@ export default function YearCard({ data, defaultOpen = false }: YearCardProps) {
           open={true}
           onClose={() => setEditMateria(null)}
           materia={editMateria}
+          onRefresh={onRefresh}
         />
       )}
 
@@ -216,6 +217,7 @@ export default function YearCard({ data, defaultOpen = false }: YearCardProps) {
           onClose={() => setAgregarConfig(null)}
           anioDefault={agregarConfig.anio}
           cuatriDefault={agregarConfig.cuatri}
+          onRefresh={onRefresh}
         />
       )}
     </>

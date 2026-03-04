@@ -16,8 +16,6 @@ export interface NotasInput {
 }
 
 // ─── Guardar notas de una materia ─────────────────────────────────────────────
-// Recibe los valores directamente (no FormData) para evitar problemas de
-// serialización en producción.
 
 export async function guardarNotas(
   materiaId: string,
@@ -33,6 +31,7 @@ export async function guardarNotas(
     .from('materias')
     .update({ estado })
     .eq('id', materiaId)
+    .eq('usuario_id', user.id)   // seguridad: sólo la materia del usuario
 
   if (estadoError) {
     const msg = estadoError.message.includes('estado_valido')

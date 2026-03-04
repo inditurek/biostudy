@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import type { MateriaConNotas } from './types'
 import type { EstadoMateria } from '@/lib/supabase/types'
 import { guardarNotas, agregarMateria } from '@/app/(app)/historial/actions'
@@ -12,6 +11,8 @@ interface EditMateriaModalProps {
   materia?: MateriaConNotas
   anioDefault?: number
   cuatriDefault?: 1 | 2
+  /** Refetch client-side desde DB después de guardar (editar y agregar) */
+  onRefresh?: () => Promise<void>
 }
 
 const ESTADOS: { value: EstadoMateria; label: string }[] = [
@@ -45,8 +46,8 @@ export default function EditMateriaModal({
   materia,
   anioDefault = 1,
   cuatriDefault = 1,
+  onRefresh,
 }: EditMateriaModalProps) {
-  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -98,7 +99,8 @@ export default function EditMateriaModal({
           return
         }
 
-        router.refresh()
+        // Refetch desde DB para mostrar datos frescos, luego cerrar modal
+        await onRefresh?.()
         onClose()
       } catch (err) {
         setErrorMsg(err instanceof Error ? err.message : 'Error inesperado al guardar.')
