@@ -84,7 +84,7 @@ function buildAniosFromRaw(rawMaterias: MateriaRow[]): AnioData[] {
 export default function HistorialToggle({ anios: initialAnios }: HistorialToggleProps) {
   const [vista, setVista] = useState<Vista>('historial')
   const [anios, setAnios] = useState<AnioData[]>(initialAnios)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(initialAnios.length === 0)
 
   /**
    * Consulta materias + notas_materia directo desde Supabase (browser client).
