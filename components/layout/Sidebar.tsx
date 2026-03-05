@@ -44,11 +44,11 @@ function IconCalendario() {
   )
 }
 
-function IconGuia() {
+function IconTimer() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" className="h-[22px] w-[22px]">
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-      <path d="M6 12v5c3 3 9 3 12 0v-5" />
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
     </svg>
   )
 }
@@ -69,7 +69,7 @@ const navItems = [
   { href: '/cuadernos',  label: 'Cuadernos', icon: IconCuadernos },
   { href: '/historial',  label: 'Historial', icon: IconHistorial },
   { href: '/calendario', label: 'Calendario',icon: IconCalendario },
-  { href: '/guia',       label: 'Guía',      icon: IconGuia },
+  { href: '/temporizador', label: 'Foco',      icon: IconTimer },
 ]
 
 // ─── NavItem ──────────────────────────────────────────────────────────────────

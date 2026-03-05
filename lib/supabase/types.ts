@@ -192,6 +192,24 @@ export type MateriaUpdate = Partial<Omit<Materia, 'id' | 'usuario_id' | 'creado_
 export type NotaMateriaUpdate = Partial<Omit<NotaMateria, 'id' | 'materia_id'>>
 export type EventoUpdate = Partial<Omit<Evento, 'id' | 'usuario_id' | 'creado_en'>>
 export type TodoUpdate = Partial<Omit<Todo, 'id' | 'usuario_id' | 'creado_en'>>
+
+export type PresetFoco = 'pomodoro' | 'deep-work' | 'sprint-corto' | 'personalizado'
+
+export interface SesionFoco {
+  id: string
+  usuario_id: string
+  fecha: string           // 'YYYY-MM-DD'
+  duracion_min: number
+  preset: PresetFoco
+  materia_id: string | null
+  completada: boolean
+  creado_en: string
+}
+
+export type SesionFocoInsert = Omit<SesionFoco, 'id' | 'creado_en'> & {
+  id?: string
+  creado_en?: string
+}
 export type ProgresoGuiaUpdate = Partial<
   Omit<ProgresoGuia, 'id' | 'separador_id' | 'fecha_inicio'>
 >
