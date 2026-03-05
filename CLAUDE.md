@@ -20,6 +20,38 @@ Always use the `gh` CLI to create pull requests whenever possible. Example: `gh 
 
 ---
 
+## Branches y Pull Requests — OBLIGATORIO
+
+**Nunca commitear directamente a `main`.** Todo desarrollo se hace en un branch separado y se mergea vía PR.
+
+Flujo obligatorio para cada tarea:
+
+```bash
+# 1. Crear branch desde main actualizado
+git checkout main && git pull origin main
+git checkout -b feat/nombre-descriptivo   # o fix/, chore/, etc.
+
+# 2. Desarrollar con commits incrementales en el branch
+git add <archivos>
+git commit -m "feat: ..."
+
+# 3. Push del branch
+git push -u origin feat/nombre-descriptivo
+
+# 4. Crear PR con gh CLI
+gh pr create --title "..." --body "..."
+
+# 5. Confirmar con gh pr view y devolver la URL al usuario
+gh pr view --web
+```
+
+Convención de nombres de branch:
+- `feat/nombre` — nueva funcionalidad
+- `fix/nombre` — corrección de bug
+- `chore/nombre` — refactor, limpieza, config
+
+---
+
 ## ¿Qué es este proyecto?
 
 StudyLab es una aplicación web personal de gestión académica universitaria. Su objetivo
