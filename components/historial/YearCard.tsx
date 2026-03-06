@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { AnioData, MateriaConNotas } from './types'
 import EditMateriaModal from './EditMateriaModal'
 import type { EstadoMateria } from '@/lib/supabase/types'
+import { eliminarMateria } from '@/app/(app)/historial/actions'
 
 const ORDINAL = ['', 'Primer', 'Segundo', 'Tercer', 'Cuarto', 'Quinto']
 
@@ -46,9 +48,10 @@ interface CuatriTableProps {
   anio: number
   onEdit: (m: MateriaConNotas) => void
   onAgregar: (anio: number, cuatri: 1 | 2) => void
+  onDelete: (materiaId: string, nombre: string) => void
 }
 
-function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar }: CuatriTableProps) {
+function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar, onDelete }: CuatriTableProps) {
   const emoji = cuatrimestre === 1 ? '📘' : '📗'
   return (
     <div className="px-6 pb-2">
@@ -85,15 +88,26 @@ function CuatriTable({ materias, cuatrimestre, promedio, anio, onEdit, onAgregar
               <td className={cn('py-3 text-center text-[13px]', notaColor(m.notas?.cursada ?? null))}>{fmt(m.notas?.cursada ?? null)}</td>
               <td className="py-3 text-center"><EstadoBadge estado={m.estado} /></td>
               <td className="py-3 text-center">
-                <button
-                  onClick={() => onEdit(m)}
-                  className="rounded-lg p-1 text-brand-200 opacity-0 transition hover:bg-brand-100 hover:text-brand-500 group-hover:opacity-100"
-                  title="Editar notas"
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
+                <div className="flex items-center justify-center gap-0.5 opacity-0 transition group-hover:opacity-100">
+                  <button
+                    onClick={() => onEdit(m)}
+                    className="rounded-lg p-1 text-brand-200 transition hover:bg-brand-100 hover:text-brand-500"
+                    title="Editar notas"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => onDelete(m.id, m.nombre)}
+                    className="rounded-lg p-1 text-brand-200 transition hover:bg-red-50 hover:text-red-500"
+                    title="Eliminar materia"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -120,9 +134,24 @@ interface YearCardProps {
 }
 
 export default function YearCard({ data, defaultOpen = false, onRefresh }: YearCardProps) {
+  const router = useRouter()
   const [open, setOpen] = useState(defaultOpen)
   const [editMateria, setEditMateria] = useState<MateriaConNotas | null>(null)
   const [agregarConfig, setAgregarConfig] = useState<{ anio: number; cuatri: 1 | 2 } | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function handleDelete(materiaId: string, nombre: string) {
+    if (!confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return
+    setDeletingId(materiaId)
+    const res = await eliminarMateria(materiaId)
+    setDeletingId(null)
+    if (res.ok) {
+      if (onRefresh) await onRefresh()
+      router.refresh()  // re-render server component para empty state si corresponde
+    } else {
+      alert(`Error al eliminar: ${res.error}`)
+    }
+  }
 
   const enCurso = data.cuatrimestres.some(c =>
     c.materias.some(m => m.estado === 'cursando')
@@ -194,6 +223,7 @@ export default function YearCard({ data, defaultOpen = false, onRefresh }: YearC
                 anio={data.anio}
                 onEdit={setEditMateria}
                 onAgregar={(anio, cuatri) => setAgregarConfig({ anio, cuatri })}
+                onDelete={handleDelete}
               />
             ))}
           </div>
