@@ -117,3 +117,100 @@ export async function cargarMateriasAction(): Promise<void> {
   await cargarMateriasIniciales()
   revalidatePath('/historial')
 }
+
+// ─── Eliminar materia ─────────────────────────────────────────────────────────
+
+export async function eliminarMateria(
+  materiaId: string
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  // Eliminar notas asociadas primero (por si no hay CASCADE en la migración)
+  await supabase.from('notas_materia').delete().eq('materia_id', materiaId)
+  await supabase.from('sesiones_foco').delete().eq('materia_id', materiaId)
+
+  const { error } = await supabase
+    .from('materias')
+    .delete()
+    .eq('id', materiaId)
+    .eq('usuario_id', user.id)   // seguridad: sólo materias propias
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/historial')
+  revalidatePath('/')
+  return { ok: true }
+}
+
+// ─── Cargar plan personalizado (CSV) ─────────────────────────────────────────
+// Formato por línea: Nombre;Año;Cuatrimestre;Estado(opcional)
+// Ejemplo:           Cálculo I;1;1;aprobada
+
+export async function cargarPlanPersonalizado(
+  texto: string
+): Promise<{ ok: boolean; importadas: number; error?: string }> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const estadosValidos: EstadoMateria[] = [
+    'pendiente', 'cursando', 'aprobada', 'promocionada', 'libre', 'final_pendiente',
+  ]
+
+  const lineas = texto
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !l.startsWith('#'))
+
+  if (lineas.length === 0) {
+    return { ok: false, importadas: 0, error: 'El texto no contiene materias válidas.' }
+  }
+
+  let importadas = 0
+  const errores: string[] = []
+
+  for (const linea of lineas) {
+    const partes = linea.split(';').map((p) => p.trim())
+    if (partes.length < 3) {
+      errores.push(`Formato inválido: "${linea}" (necesita al menos Nombre;Año;Cuatrimestre)`)
+      continue
+    }
+
+    const nombre      = partes[0]
+    const anio        = parseInt(partes[1])
+    const cuatrimestre = parseInt(partes[2])
+    const estadoRaw   = (partes[3] ?? '').toLowerCase()
+    const estado: EstadoMateria = estadosValidos.includes(estadoRaw as EstadoMateria)
+      ? (estadoRaw as EstadoMateria)
+      : 'pendiente'
+
+    if (!nombre || isNaN(anio) || anio < 1 || anio > 10 || ![1, 2].includes(cuatrimestre)) {
+      errores.push(`Datos inválidos en: "${linea}"`)
+      continue
+    }
+
+    const { error } = await supabase.from('materias').insert({
+      usuario_id: user.id,
+      nombre,
+      anio,
+      cuatrimestre: cuatrimestre as 1 | 2,
+      estado,
+    })
+
+    if (error) {
+      errores.push(`Error en "${nombre}": ${error.message}`)
+    } else {
+      importadas++
+    }
+  }
+
+  revalidatePath('/historial')
+  revalidatePath('/')
+
+  if (importadas === 0) {
+    return { ok: false, importadas: 0, error: errores.join('\n') }
+  }
+  return { ok: true, importadas }
+}

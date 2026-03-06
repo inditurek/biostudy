@@ -88,7 +88,8 @@ export default function AjustesClient({ perfil, email }: Props) {
   // ── UI ───────────────────────────────────────────────────────────────────────
   return (
     <>
-      <div className="flex max-w-2xl flex-col gap-6">
+      <div className="min-h-screen bg-brand-50 px-6 py-8 md:px-10">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6">
 
         {/* ── Título ────────────────────────────────────────────────────────── */}
         <div>
@@ -289,6 +290,7 @@ export default function AjustesClient({ perfil, email }: Props) {
           </div>
         </div>
       )}
+      </div>
     </>
   )
 }
