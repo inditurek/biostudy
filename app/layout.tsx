@@ -26,6 +26,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+      <head>
+        {/* Aplica el tema antes del primer render para evitar flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={`${fraunces.variable} ${dmSans.variable} font-dm-sans`}>
         {children}
       </body>
