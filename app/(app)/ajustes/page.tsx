@@ -1,13 +1,33 @@
-export default function AjustesPage() {
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import AjustesClient from '@/components/ajustes/AjustesClient'
+
+// ─── Tipo de perfil ───────────────────────────────────────────────────────────
+
+export interface Perfil {
+  id: string
+  nombre: string | null
+  carrera: string | null
+  universidad: string | null
+}
+
+// ─── Página ───────────────────────────────────────────────────────────────────
+
+export default async function AjustesPage() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: perfil } = await supabase
+    .from('perfiles')
+    .select('id, nombre, carrera, universidad')
+    .eq('id', user.id)
+    .single()
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-50">
-      <div className="text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-brand-100 mx-auto">
-          <span className="text-3xl">⚙️</span>
-        </div>
-        <h1 className="font-fraunces text-2xl font-semibold text-brand-900">Ajustes</h1>
-        <p className="mt-2 text-sm text-brand-400">Próximamente...</p>
-      </div>
-    </div>
+    <AjustesClient
+      perfil={perfil as Perfil | null}
+      email={user.email ?? ''}
+    />
   )
 }
