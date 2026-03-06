@@ -124,7 +124,8 @@ export default function HomeClient({
   const todosCompletados = todos.filter((t) => t.completado).length
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="min-h-screen bg-brand-50 px-6 py-8 md:px-10">
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -340,6 +341,7 @@ export default function HomeClient({
           )}
         </div>
       )}
+    </div>
     </div>
   )
 }
